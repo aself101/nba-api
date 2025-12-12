@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/aself101/nba-api/compare/v1.0.1...v1.0.2) (2025-12-12)
+
+
+### Bug Fixes
+
+* **box-score:** use raw API response for V3 box score endpoints ([baa2eb4](https://github.com/aself101/nba-api/commit/baa2eb47cb59bd40f8645e197529121b70c732d9))
+
 ## [1.0.1](https://github.com/aself101/nba-api/compare/v1.0.0...v1.0.1) (2025-12-12)
 
 
