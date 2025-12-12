@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/aself101/nba-api/compare/v1.0.0...v1.0.1) (2025-12-12)
+
+
+### Bug Fixes
+
+* **scoreboard:** use raw API response for scoreboardv3 endpoint ([71bffd1](https://github.com/aself101/nba-api/commit/71bffd17b0d531436bff4fdcddeb0622d59e2906))
+
 # 1.0.0 (2025-12-12)
 
 
