@@ -567,6 +567,7 @@ export interface BoxScoreTraditional {
     homeTeamId: number;
     awayTeamId: number;
     gameDateEst: string;
+    gameCode: string;
     playerStats: BoxScorePlayerStats[];
     teamStats: BoxScoreTeamStats[];
 }
@@ -597,6 +598,7 @@ export interface BoxScoreAdvanced {
     homeTeamId: number;
     awayTeamId: number;
     gameDateEst: string;
+    gameCode: string;
     playerStats: BoxScoreAdvancedPlayerStats[];
     teamStats: Record<string, unknown>[];
 }

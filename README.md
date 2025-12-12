@@ -11,6 +11,8 @@ A TypeScript wrapper for [NBA Stats](https://stats.nba.com/) and [NBA Live](http
 
 This service follows the data-collection architecture pattern with organized data storage, rate limiting, comprehensive logging, and CLI orchestration.
 
+> **Note:** This project is under active development. APIs and CLI options may change between versions.
+
 ## Quick Start
 
 ### CLI Usage
@@ -19,10 +21,10 @@ This service follows the data-collection architecture pattern with organized dat
 npm install -g nba-api
 
 # Get league leaders for current season
-nba-api --league-leaders
+nba --league-leaders
 
 # Get live scoreboard
-nba-api --live-scoreboard
+nba --live-scoreboard
 ```
 
 ### Programmatic Usage
@@ -163,13 +165,13 @@ Optional (for anti-bot bypass):
 
 ```bash
 # Global install
-nba-api [options]
+nba [options]
 
 # Local install (use npx)
 npx nba-api [options]
 
 # From source (development)
-npm run nba-api -- [options]
+npm run nba -- [options]
 ```
 
 ### Category Flags
@@ -608,7 +610,7 @@ console.log(`Total teams: ${teams.length}`)
 ### Example 1: Get Current Season Leaders
 
 ```bash
-nba-api --league-leaders
+nba --league-leaders
 ```
 
 ```typescript
@@ -629,8 +631,8 @@ await api.close()
 ### Example 2: Player Career Summary
 
 ```bash
-nba-api --player-career --player-id 2544
-nba-api --player-info --player-id 2544
+nba --player-career --player-id 2544
+nba --player-info --player-id 2544
 ```
 
 ```typescript
@@ -657,8 +659,8 @@ await api.close()
 ### Example 3: Live Game Tracking
 
 ```bash
-nba-api --live-scoreboard
-nba-api --live-box-score --game-id 0022400123
+nba --live-scoreboard
+nba --live-box-score --game-id 0022400123
 ```
 
 ```typescript
@@ -681,7 +683,7 @@ await api.close()
 ### Example 4: Team Season Analysis
 
 ```bash
-nba-api --team-game-log --team-id 1610612747 --season 2024-25
+nba --team-game-log --team-id 1610612747 --season 2024-25
 ```
 
 ```typescript
@@ -703,13 +705,13 @@ await api.close()
 
 ```bash
 # Fetch standings for 5 seasons
-nba-api --standings --start-season 2020-21 --end-season 2024-25
+nba --standings --start-season 2020-21 --end-season 2024-25
 ```
 
 ### Example 6: Dry Run Preview
 
 ```bash
-nba-api --all --season 2024-25 --dry-run
+nba --all --season 2024-25 --dry-run
 ```
 
 Output:
@@ -812,13 +814,13 @@ The API uses a tiered approach to handle rate limiting and anti-bot measures:
 
 ```bash
 # Tier 1 only (default)
-nba-api --league-leaders --client tier1
+nba --league-leaders --client tier1
 
 # Tier 2 only (puppeteer)
-nba-api --league-leaders --client tier2
+nba --league-leaders --client tier2
 
 # Auto mode - tries Tier 1 first, falls back to Tier 2
-nba-api --league-leaders --client auto
+nba --league-leaders --client auto
 ```
 
 ```typescript
@@ -1032,8 +1034,8 @@ Error: Invalid season format: 2024. Expected format: YYYY-YY (e.g., 2024-25)
 
 **Solution:** Use the correct format:
 ```bash
-nba-api --standings --season 2024-25  # Correct
-nba-api --standings --season 2024     # Wrong
+nba --standings --season 2024-25  # Correct
+nba --standings --season 2024     # Wrong
 ```
 
 ### Missing Required Parameter
@@ -1044,7 +1046,7 @@ Error: --player-id is required for player endpoints
 
 **Solution:** Provide the required parameter:
 ```bash
-nba-api --player-career --player-id 2544
+nba --player-career --player-id 2544
 ```
 
 ### Tier 2 Not Available
@@ -1066,8 +1068,8 @@ Error: Invalid game ID: 12345. Must be a 10-digit string...
 
 **Solution:** Use the full 10-digit game ID:
 ```bash
-nba-api --box-score --game-id 0022400123  # Correct
-nba-api --box-score --game-id 12345       # Wrong
+nba --box-score --game-id 0022400123  # Correct
+nba --box-score --game-id 12345       # Wrong
 ```
 
 ### V3 Endpoints Return Empty Data
@@ -1121,8 +1123,8 @@ npm install
 npm run build
 
 # Run CLI from source
-npm run nba-api -- --examples
-npm run nba-api -- --league-leaders --dry-run
+npm run nba -- --examples
+npm run nba -- --league-leaders --dry-run
 ```
 
 ### Testing

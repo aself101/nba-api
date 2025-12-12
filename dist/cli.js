@@ -5,10 +5,10 @@
  * Command-line interface for fetching NBA statistics data.
  *
  * Usage:
- *   nba-api --league-leaders --season 2024-25
- *   nba-api --player-career --player-id 2544
- *   nba-api --live-scoreboard
- *   nba-api --all --season 2024-25
+ *   nba --league-leaders --season 2024-25
+ *   nba --player-career --player-id 2544
+ *   nba --live-scoreboard
+ *   nba --all --season 2024-25
  */
 import { createRequire } from 'module';
 import { program } from 'commander';
@@ -20,7 +20,7 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 const DEFAULT_DATA_DIR = 'datasets';
 program
-    .name('nba-api')
+    .name('nba')
     .description('NBA Stats and Live API data fetcher')
     .version(version);
 // ============================================================================
@@ -113,49 +113,49 @@ NBA API CLI - Usage Examples
 ============================
 
 # Fetch league leaders for current season
-nba-api --league-leaders
+nba --league-leaders
 
 # Fetch league leaders for specific season
-nba-api --league-leaders --season 2024-25
+nba --league-leaders --season 2024-25
 
 # Fetch player career stats (LeBron James)
-nba-api --player-career --player-id 2544
+nba --player-career --player-id 2544
 
 # Fetch player game log
-nba-api --player-game-log --player-id 2544 --season 2024-25
+nba --player-game-log --player-id 2544 --season 2024-25
 
 # Fetch team roster (Lakers)
-nba-api --team-roster --team-id 1610612747 --season 2024-25
+nba --team-roster --team-id 1610612747 --season 2024-25
 
 # Fetch standings
-nba-api --standings --season 2024-25
+nba --standings --season 2024-25
 
 # Fetch scoreboard for today
-nba-api --scoreboard
+nba --scoreboard
 
 # Fetch scoreboard for specific date
-nba-api --scoreboard --game-date 2025-01-15
+nba --scoreboard --game-date 2025-01-15
 
 # Fetch box score for a game
-nba-api --box-score --game-id 0022400123
+nba --box-score --game-id 0022400123
 
 # Fetch live scoreboard
-nba-api --live-scoreboard
+nba --live-scoreboard
 
 # Fetch live box score
-nba-api --live-box-score --game-id 0022400123
+nba --live-box-score --game-id 0022400123
 
 # Fetch all player endpoints
-nba-api --all-player-endpoints --player-id 2544 --season 2024-25
+nba --all-player-endpoints --player-id 2544 --season 2024-25
 
 # Fetch standings for multiple seasons
-nba-api --standings --start-season 2020-21 --end-season 2024-25
+nba --standings --start-season 2020-21 --end-season 2024-25
 
 # Dry run to preview
-nba-api --all --season 2024-25 --dry-run
+nba --all --season 2024-25 --dry-run
 
 # Use puppeteer client for anti-bot bypass
-nba-api --league-leaders --client tier2
+nba --league-leaders --client tier2
 
 Common Player IDs:
   LeBron James: 2544
@@ -239,7 +239,7 @@ async function main() {
     ];
     if (!endpoints.some(Boolean)) {
         console.error('Error: At least one endpoint must be specified');
-        console.log('Run: nba-api --examples for usage');
+        console.log('Run: nba --examples for usage');
         process.exit(1);
     }
     // Validate required parameters
@@ -408,7 +408,10 @@ async function main() {
             try {
                 reporter.logFetch('boxScoreTraditional', { gameId: opts.gameId });
                 const data = await api.getBoxScoreTraditional(opts.gameId);
-                const filepath = `${outputDir}/nba/boxscore/traditional_${opts.gameId}.json`;
+                // Use gameCode for filename: "20241225/SASNYK" -> traditional_SASNYK_20241225.json
+                const [date, teams] = data.gameCode ? data.gameCode.split('/') : ['', ''];
+                const filename = teams && date ? `traditional_${teams}_${date}.json` : `traditional_${opts.gameId}.json`;
+                const filepath = `${outputDir}/nba/boxscore/${filename}`;
                 writeToFile(data, filepath);
                 reporter.logSuccess('boxScoreTraditional', filepath);
             }
@@ -421,7 +424,10 @@ async function main() {
             try {
                 reporter.logFetch('boxScoreAdvanced', { gameId: opts.gameId });
                 const data = await api.getBoxScoreAdvanced(opts.gameId);
-                const filepath = `${outputDir}/nba/boxscore/advanced_${opts.gameId}.json`;
+                // Use gameCode for filename: "20241225/SASNYK" -> advanced_SASNYK_20241225.json
+                const [date, teams] = data.gameCode ? data.gameCode.split('/') : ['', ''];
+                const filename = teams && date ? `advanced_${teams}_${date}.json` : `advanced_${opts.gameId}.json`;
+                const filepath = `${outputDir}/nba/boxscore/${filename}`;
                 writeToFile(data, filepath);
                 reporter.logSuccess('boxScoreAdvanced', filepath);
             }

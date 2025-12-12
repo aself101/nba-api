@@ -6,7 +6,7 @@
   "main": "dist/api.js",
   "types": "dist/api.d.ts",
   "bin": {
-    "nba-api": "dist/cli.js"
+    "nba": "dist/cli.js"
   },
   "exports": {
     ".": {
@@ -50,9 +50,9 @@
   ],
   "scripts": {
     "build": "tsc",
-    "nba-api": "node dist/cli.js",
-    "nba-api:help": "node dist/cli.js --help",
-    "nba-api:examples": "node dist/cli.js --examples",
+    "nba": "node dist/cli.js",
+    "nba:help": "node dist/cli.js --help",
+    "nba:examples": "node dist/cli.js --examples",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",

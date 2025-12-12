@@ -106,6 +106,26 @@ export class NbaAPI {
         const response = await fetchLive(endpoint, options);
         return response.data;
     }
+    /**
+     * Get game info (gameCode and date) from Live API.
+     * @param gameId - NBA game ID (10 digits)
+     * @returns Object with gameCode and gameDateEst
+     */
+    async _getGameInfo(gameId) {
+        try {
+            const data = await this._fetchLive(ENDPOINTS.LIVE_BOXSCORE, gameId);
+            const game = data?.game ?? {};
+            const gameCode = game['gameCode'] ?? '';
+            // gameCode format: "YYYYMMDD/AWYHOME" (e.g., "20241225/SASNYK")
+            // Extract date from gameCode
+            const gameDateEst = gameCode.split('/')[0] ?? '';
+            return { gameCode, gameDateEst };
+        }
+        catch {
+            // If Live API fails, return empty values
+            return { gameCode: '', gameDateEst: '' };
+        }
+    }
     // ===========================================================================
     // Player Endpoints
     // ===========================================================================
@@ -539,6 +559,8 @@ export class NbaAPI {
      */
     async getBoxScoreTraditional(gameId) {
         validateGameId(gameId);
+        // Fetch game info (gameCode and date) from Live API
+        const gameInfo = await this._getGameInfo(gameId);
         // boxscoretraditionalv3 uses non-standard response format, need raw response
         const rawData = (await this._fetchStats(ENDPOINTS.BOX_SCORE_TRADITIONAL, {
             GameID: gameId,
@@ -560,7 +582,8 @@ export class NbaAPI {
             gameId: boxScore['gameId'] ?? gameId,
             homeTeamId: boxScore['homeTeamId'] ?? 0,
             awayTeamId: boxScore['awayTeamId'] ?? 0,
-            gameDateEst: boxScore['gameTimeLocal'] ?? '',
+            gameDateEst: gameInfo.gameDateEst,
+            gameCode: gameInfo.gameCode,
             playerStats,
             teamStats,
         };
@@ -571,6 +594,8 @@ export class NbaAPI {
      */
     async getBoxScoreAdvanced(gameId) {
         validateGameId(gameId);
+        // Fetch game info (gameCode and date) from Live API
+        const gameInfo = await this._getGameInfo(gameId);
         // boxscoreadvancedv3 uses non-standard response format, need raw response
         const rawData = (await this._fetchStats(ENDPOINTS.BOX_SCORE_ADVANCED, {
             GameID: gameId,
@@ -592,7 +617,8 @@ export class NbaAPI {
             gameId: boxScore['gameId'] ?? gameId,
             homeTeamId: boxScore['homeTeamId'] ?? 0,
             awayTeamId: boxScore['awayTeamId'] ?? 0,
-            gameDateEst: boxScore['gameTimeLocal'] ?? '',
+            gameDateEst: gameInfo.gameDateEst,
+            gameCode: gameInfo.gameCode,
             playerStats,
             teamStats: [homeTeamStats, awayTeamStats],
         };

@@ -50,6 +50,12 @@ export declare class NbaAPI {
     private _fetchStats;
     private _fetchLive;
     /**
+     * Get game info (gameCode and date) from Live API.
+     * @param gameId - NBA game ID (10 digits)
+     * @returns Object with gameCode and gameDateEst
+     */
+    private _getGameInfo;
+    /**
      * Get player career statistics.
      * @param playerId - NBA player ID
      * @param options - Optional parameters (perMode, leagueId)
