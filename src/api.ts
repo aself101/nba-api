@@ -196,16 +196,33 @@ export class NbaAPI {
   // Internal Helpers
   // ===========================================================================
 
+  // Overload signatures for proper type inference
   private async _fetchStats(
     endpoint: string,
-    params: Record<string, string | number | boolean | null | undefined> = {}
-  ): Promise<NormalizedResponse> {
+    params: Record<string, string | number | boolean | null | undefined>,
+    options: { returnRaw: true }
+  ): Promise<unknown>
+  private async _fetchStats(
+    endpoint: string,
+    params?: Record<string, string | number | boolean | null | undefined>,
+    options?: { returnRaw?: false }
+  ): Promise<NormalizedResponse>
+  private async _fetchStats(
+    endpoint: string,
+    params: Record<string, string | number | boolean | null | undefined> = {},
+    options: { returnRaw?: boolean } = {}
+  ): Promise<NormalizedResponse | unknown> {
     this.logger.debug(`Fetching ${endpoint} with params: ${JSON.stringify(params)}`)
 
     const response = await fetchStats(endpoint, params, {
       timeout: this.timeout,
       clientTier: this.clientTier,
     })
+
+    // Return raw response for endpoints with non-standard format (e.g., scoreboardv3)
+    if (options.returnRaw) {
+      return response.raw
+    }
 
     return response.data as NormalizedResponse
   }
@@ -737,19 +754,27 @@ export class NbaAPI {
   async getScoreboard(gameDate?: string): Promise<Scoreboard> {
     if (gameDate) validateDate(gameDate)
 
-    const data = await this._fetchStats(ENDPOINTS.SCOREBOARD, {
-      GameDate: gameDate ?? '',
-      LeagueID: LeagueID.NBA,
-    })
+    // scoreboardv3 uses non-standard response format, need raw response
+    const rawData = (await this._fetchStats(
+      ENDPOINTS.SCOREBOARD,
+      {
+        GameDate: gameDate ?? '',
+        LeagueID: LeagueID.NBA,
+      },
+      { returnRaw: true }
+    )) as Record<string, unknown>
 
-    // V3 scoreboard has different structure
-    const scoreboard = data['ScoreBoard'] ?? data['scoreboard'] ?? data
+    // V3 scoreboard structure: { scoreboard: { games: [...] } }
+    const scoreboard = (rawData['scoreboard'] ?? rawData['ScoreBoard'] ?? rawData) as Record<
+      string,
+      unknown
+    >
 
     return {
       gameDate: gameDate ?? new Date().toISOString().split('T')[0] ?? '',
       leagueId: LeagueID.NBA,
       leagueName: 'National Basketball Association',
-      games: (scoreboard as Record<string, unknown>)['games'] as Scoreboard['games'] ?? [],
+      games: (scoreboard['games'] as Scoreboard['games']) ?? [],
     }
   }
 

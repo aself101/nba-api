@@ -83,15 +83,16 @@ export class NbaAPI {
     get connected() {
         return this.isConnected;
     }
-    // ===========================================================================
-    // Internal Helpers
-    // ===========================================================================
-    async _fetchStats(endpoint, params = {}) {
+    async _fetchStats(endpoint, params = {}, options = {}) {
         this.logger.debug(`Fetching ${endpoint} with params: ${JSON.stringify(params)}`);
         const response = await fetchStats(endpoint, params, {
             timeout: this.timeout,
             clientTier: this.clientTier,
         });
+        // Return raw response for endpoints with non-standard format (e.g., scoreboardv3)
+        if (options.returnRaw) {
+            return response.raw;
+        }
         return response.data;
     }
     async _fetchLive(endpoint, gameId) {
@@ -518,12 +519,13 @@ export class NbaAPI {
     async getScoreboard(gameDate) {
         if (gameDate)
             validateDate(gameDate);
-        const data = await this._fetchStats(ENDPOINTS.SCOREBOARD, {
+        // scoreboardv3 uses non-standard response format, need raw response
+        const rawData = (await this._fetchStats(ENDPOINTS.SCOREBOARD, {
             GameDate: gameDate ?? '',
             LeagueID: LeagueID.NBA,
-        });
-        // V3 scoreboard has different structure
-        const scoreboard = data['ScoreBoard'] ?? data['scoreboard'] ?? data;
+        }, { returnRaw: true }));
+        // V3 scoreboard structure: { scoreboard: { games: [...] } }
+        const scoreboard = (rawData['scoreboard'] ?? rawData['ScoreBoard'] ?? rawData);
         return {
             gameDate: gameDate ?? new Date().toISOString().split('T')[0] ?? '',
             leagueId: LeagueID.NBA,
