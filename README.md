@@ -220,7 +220,7 @@ Fetch groups of endpoints at once:
 --live-odds              # Today's odds
 
 # Other endpoints
---shot-chart             # Shot chart (requires --player-id, --team-id)
+--shot-chart             # Shot chart (requires --player-id, --team-id optional)
 --draft-history          # Draft history
 ```
 
@@ -475,12 +475,19 @@ const plays = await api.getPlayByPlay('0022400123')
 // Returns: Array of plays with eventNum, period, clock, description, score, etc.
 ```
 
-#### `getShotChartDetail(playerId, teamId, season)`
+#### `getShotChartDetail(options)`
 
 Get shot chart data.
 
 ```typescript
-const shots = await api.getShotChartDetail(2544, 1610612747, '2024-25')
+const shots = await api.getShotChartDetail({
+  playerId: 2544,           // Required
+  teamId: 1610612747,       // Optional (defaults to 0 for all teams)
+  season: '2024-25',        // Optional (defaults to current season)
+  seasonType: 'Regular Season',  // Optional
+  gameId: '',               // Optional - filter to specific game
+  contextMeasure: 'FGA',    // Optional - 'FGA', 'FGM', 'FG3A', etc.
+})
 // Returns: Array of shots with locX, locY, shotType, shotZone, shotMadeFlag, etc.
 ```
 
@@ -934,6 +941,7 @@ import type {
   PlayerCareerOptions,
   LeagueDashOptions,
   GameFinderOptions,
+  ShotChartOptions,
 } from 'nba-api'
 ```
 
@@ -1062,18 +1070,40 @@ nba-api --box-score --game-id 0022400123  # Correct
 nba-api --box-score --game-id 12345       # Wrong
 ```
 
-### Play-by-Play Endpoint Returns 500
+### V3 Endpoints Return Empty Data
 
+Some NBA Stats API V3 endpoints use a non-standard response format that differs from the typical `resultSets` structure. If you're developing with this package and encounter empty data from endpoints like `scoreboardv3`, `boxscoretraditionalv3`, or `boxscoreadvancedv3`, the response format may have changed.
+
+**V3 Response Format:**
+```json
+{
+  "boxScoreTraditional": {
+    "gameId": "...",
+    "homeTeam": { "players": [...] },
+    "awayTeam": { "players": [...] }
+  }
+}
 ```
-Error: HTTP 500: Internal Server Error
+
+**Standard Format (most endpoints):**
+```json
+{
+  "resultSets": [
+    { "name": "PlayerStats", "headers": [...], "rowSet": [[...]] }
+  ]
+}
 ```
 
-The `--play-by-play` endpoint (stats.nba.com's `playbyplayv2`) intermittently returns HTTP 500 errors. This is a known issue with the NBA Stats API, not this package.
+**Solution:** When adding new V3 endpoints or debugging empty responses, use the `returnRaw: true` option in `_fetchStats()` to bypass `normalizeResponse()` and parse the nested structure manually. See `CLAUDE.md` for detailed patterns.
 
-**Workarounds:**
-1. Use `--live-play-by-play` for games currently in progress (uses the more reliable Live API)
-2. Try again later - the endpoint may be temporarily unavailable
-3. Use `--client tier2` to attempt with the Puppeteer client
+### Play-by-Play V3 Returns HTTP 500
+
+The `playbyplayv3` endpoint on stats.nba.com returns HTTP 500 errors. This package uses the legacy `playbyplay` endpoint instead, which works reliably.
+
+If you encounter HTTP 500 errors from play-by-play:
+1. The legacy endpoint should work - ensure you're using the latest version of this package
+2. Use `--live-play-by-play` for games currently in progress (uses the more reliable Live API)
+3. Try again later - the NBA API can be intermittently unavailable
 
 ## Development
 
