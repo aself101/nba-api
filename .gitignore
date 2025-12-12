@@ -53,8 +53,8 @@ temp/
 *.tmp
 *-features-list.md
 
-# Build outputs (if applicable in future)
-dist/
+# Build outputs
+# Note: dist/ is NOT ignored - it's needed for npm package
 build/
 
 # Vitest

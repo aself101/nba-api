@@ -44,7 +44,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "tsc",
@@ -68,8 +70,15 @@
     "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.6",
+    "@semantic-release/npm": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.1.0",
     "@types/node": "^22.10.2",
     "@vitest/coverage-v8": "^2.1.8",
+    "semantic-release": "^24.2.9",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
   },
@@ -78,8 +87,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/nba-api"
+    "url": "https://github.com/aself101/nba-api"
   },
+  "bugs": {
+    "url": "https://github.com/aself101/nba-api/issues"
+  },
+  "homepage": "https://github.com/aself101/nba-api#readme",
   "keywords": [
     "nba",
     "basketball",
@@ -88,6 +101,6 @@
     "sports",
     "statistics"
   ],
-  "author": "",
+  "author": "aself101",
   "license": "MIT"
 }

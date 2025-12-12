@@ -1,23 +1,30 @@
+# Source files (we ship dist/)
+src/
+*.ts
+!*.d.ts
+
 # Test files
 test/
 *.test.js
+*.test.ts
 coverage/
 .nyc_output/
+.vitest/
 
-
+# Config files
 tsconfig.json
+vitest.config.js
 jest.config.js
-.releaserc.json
 .eslintrc.js
 .prettierrc
+.releaserc.json
 
-# Development files
+# Environment files
 .env
 .env.*
 .env.example
-vitest.config.js
 
-# Output directories
+# Output directories (data files)
 datasets/
 test-output/
 test-api-output/
@@ -37,19 +44,15 @@ Thumbs.db
 *.swo
 *~
 
-# Git files
+# Git/GitHub
 .git/
 .gitignore
 .github/
 
-# IDE
-.vscode/
-
-# Documentation (keep README.md, LICENSE, CHANGELOG.md)
+# Documentation (except README, LICENSE, CHANGELOG)
 docs/
+*-features-list.md
+DX-VALIDATION-REPORT.md
 
 # Build artifacts
 node_modules/
-
-# release
-.releaserc.json
