@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/aself101/nba-api/compare/v1.0.3...v1.0.4) (2025-12-12)
+
+
+### Bug Fixes
+
+* **boxscore:** normalize V3 API response field names for box scores ([54b20cd](https://github.com/aself101/nba-api/commit/54b20cd07b47361fab0b7b0f8979130302deb8e6))
+
 ## [1.0.3](https://github.com/aself101/nba-api/compare/v1.0.2...v1.0.3) (2025-12-12)
 
 
