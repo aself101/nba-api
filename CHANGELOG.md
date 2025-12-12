@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/aself101/nba-api/compare/v1.0.4...v1.1.0) (2025-12-12)
+
+
+### Features
+
+* **cli:** rename CLI to nba, add gameCode and improved filenames ([7268a77](https://github.com/aself101/nba-api/commit/7268a7721f5384104a912e2a8a67b0a0e609b4e3))
+
 ## [1.0.4](https://github.com/aself101/nba-api/compare/v1.0.3...v1.0.4) (2025-12-12)
 
 
