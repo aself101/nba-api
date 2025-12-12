@@ -1,3 +1,11 @@
+# 1.0.0 (2025-12-12)
+
+
+### Features
+
+* **nba-api:** comprehensive README and release preparation ([b34ec71](https://github.com/aself101/nba-api/commit/b34ec717c11d757bd58bc4cd156df5d26eb4954b))
+* **nba-api:** initial release of NBA Stats API TypeScript wrapper ([0101203](https://github.com/aself101/nba-api/commit/01012033bb9aaf7192cb7b25bdab650f87c70122))
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
