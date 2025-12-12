@@ -151,7 +151,6 @@ npm run build
 
 Dependencies:
 - `commander` - CLI argument parsing
-- `dotenv` - Environment variable management
 - `winston` - Logging framework
 - `zod` - Runtime type validation
 
