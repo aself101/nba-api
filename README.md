@@ -553,6 +553,10 @@ import {
   players,
   findPlayerById,
   findPlayersByName,
+  findPlayersByFirstName,
+  findPlayersByLastName,
+  getPlayers,
+  getPlayerIds,
   getActivePlayers,
   getInactivePlayers,
 } from 'nba-api'
@@ -565,13 +569,23 @@ const lebron = findPlayerById(2544)
 const currys = findPlayersByName('Curry')
 // Returns all players with 'Curry' in their name
 
+// Search by first or last name specifically
+const stephens = findPlayersByFirstName('Stephen')
+const jameses = findPlayersByLastName('James')
+
+// Get all players as array
+const allPlayers = getPlayers()  // Returns 5103+ players
+
+// Get all player IDs (useful for bulk operations)
+const playerIds = getPlayerIds()
+
 // Get all active players
 const active = getActivePlayers()
 
 // Get retired/inactive players
 const retired = getInactivePlayers()
 
-// Access full player array
+// Access full player array directly
 console.log(`Total players: ${players.length}`)
 ```
 
@@ -585,6 +599,9 @@ import {
   findTeamsByName,
   findTeamsByCity,
   findTeamsByState,
+  getTeams,
+  getTeamAbbreviations,
+  getTeamIds,
 } from 'nba-api'
 
 // Find team by ID
@@ -601,7 +618,17 @@ const lakersSearch = findTeamsByName('Lakers')
 const caTeams = findTeamsByState('California')  // Warriors, Lakers, Clippers, Kings
 const nyTeams = findTeamsByCity('New York')     // Knicks
 
-// Access full team array
+// Get all teams as array
+const allTeams = getTeams()  // Returns all 30 NBA teams
+
+// Get all team abbreviations (useful for validation)
+const abbreviations = getTeamAbbreviations()
+// ['ATL', 'BOS', 'BKN', 'CHA', 'CHI', ...]
+
+// Get all team IDs (useful for bulk operations)
+const teamIds = getTeamIds()
+
+// Access full team array directly
 console.log(`Total teams: ${teams.length}`)
 ```
 
@@ -980,6 +1007,14 @@ import {
 // Static data
 import { players, findPlayerById } from 'nba-api/data/players'
 import { teams, findTeamById } from 'nba-api/data/teams'
+
+// Zod validation schemas (for runtime type validation)
+import {
+  PlayerCareerStatsSchema,
+  LeagueLeaderSchema,
+  BoxScorePlayerStatsSchema,
+  parseArraySafe,  // Helper for graceful validation with fallback
+} from 'nba-api/schemas'
 
 // Type definitions only
 import type { Player, Team, LogLevel } from 'nba-api/types'

@@ -86,6 +86,9 @@ export declare function normalizeKeys<T extends Record<string, unknown>>(obj: T)
 export declare function writeToFile(data: unknown, filepath: string, format?: 'json' | 'csv' | 'auto'): void;
 /**
  * Read data from a JSON file.
+ * @param filepath - Path to the file to read
+ * @returns Parsed JSON data, or raw string if JSON parsing fails
+ * @throws Error if file does not exist
  */
 export declare function readFromFile(filepath: string): unknown;
 /**
@@ -108,7 +111,9 @@ export declare function randomPause(min?: number, max?: number): Promise<void>;
 import winston from 'winston';
 import type { LogLevel } from './types.js';
 /**
- * Create a Winston logger instance.
+ * Create a Winston logger instance with formatted output.
+ * @param level - Log level: 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'NONE'
+ * @returns Configured Winston logger instance
  */
 export declare function createLogger(level?: LogLevel): winston.Logger;
 /**
@@ -129,10 +134,27 @@ export declare function normalizeV3AdvancedPlayerStats(player: Record<string, un
  * Normalize V3 advanced box score team data to match expected schema format.
  */
 export declare function normalizeV3AdvancedTeamStats(team: Record<string, unknown>): Record<string, unknown>;
+/**
+ * Options for the ProgressReporter class.
+ */
 export interface ProgressReporterOptions {
+    /** Output progress as JSON instead of human-readable format */
     json?: boolean;
+    /** Suppress all output */
     quiet?: boolean;
 }
+/**
+ * CLI progress reporter for displaying fetch operations status.
+ * Supports both human-readable and JSON output formats.
+ *
+ * @example
+ * ```typescript
+ * const reporter = new ProgressReporter({ quiet: false })
+ * reporter.logHeader('Fetching Data')
+ * reporter.logFetch('leagueLeaders', { season: '2024-25' })
+ * reporter.logSuccess('leagueLeaders', '/path/to/file.json')
+ * ```
+ */
 export declare class ProgressReporter {
     private json;
     private quiet;

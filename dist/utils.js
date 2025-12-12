@@ -108,6 +108,11 @@ export async function fetchStats(endpoint, params = {}, options = {}) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 const text = await response.text();
+                // DoS protection: reject responses larger than 10MB
+                const MAX_RESPONSE_SIZE = 10 * 1024 * 1024;
+                if (text.length > MAX_RESPONSE_SIZE) {
+                    throw new Error(`Response too large: ${text.length} bytes exceeds ${MAX_RESPONSE_SIZE} byte limit`);
+                }
                 let data;
                 try {
                     data = JSON.parse(text);
@@ -126,6 +131,11 @@ export async function fetchStats(endpoint, params = {}, options = {}) {
                 const client = await createPuppeteerClient();
                 try {
                     const text = await client.get(fullUrl);
+                    // DoS protection: reject responses larger than 10MB
+                    const MAX_RESPONSE_SIZE = 10 * 1024 * 1024;
+                    if (text.length > MAX_RESPONSE_SIZE) {
+                        throw new Error(`Response too large: ${text.length} bytes exceeds ${MAX_RESPONSE_SIZE} byte limit`);
+                    }
                     let data;
                     try {
                         data = JSON.parse(text);
@@ -276,6 +286,9 @@ export function writeToFile(data, filepath, format) {
 }
 /**
  * Read data from a JSON file.
+ * @param filepath - Path to the file to read
+ * @returns Parsed JSON data, or raw string if JSON parsing fails
+ * @throws Error if file does not exist
  */
 export function readFromFile(filepath) {
     if (!fs.existsSync(filepath)) {
@@ -309,7 +322,13 @@ function toCSV(data) {
                 if (value === null || value === undefined) {
                     return '';
                 }
-                const strValue = String(value);
+                let strValue = String(value);
+                // CSV injection prevention: prefix formula trigger characters with single quote
+                // This prevents malicious formulas from executing when opened in spreadsheet apps
+                const formulaTriggers = /^[=+\-@\t\r]/;
+                if (formulaTriggers.test(strValue)) {
+                    strValue = `'${strValue}`;
+                }
                 // Escape values containing commas, quotes, or newlines
                 if (strValue.includes(',') || strValue.includes('"') || strValue.includes('\n')) {
                     return `"${strValue.replace(/"/g, '""')}"`;
@@ -353,7 +372,9 @@ export async function randomPause(min = DEFAULTS.RATE_LIMIT_MIN_MS, max = DEFAUL
 // =============================================================================
 import winston from 'winston';
 /**
- * Create a Winston logger instance.
+ * Create a Winston logger instance with formatted output.
+ * @param level - Log level: 'DEBUG', 'INFO', 'WARNING', 'ERROR', or 'NONE'
+ * @returns Configured Winston logger instance
  */
 export function createLogger(level = 'INFO') {
     const winstonLevel = level === 'NONE'
@@ -536,6 +557,18 @@ export function normalizeV3AdvancedTeamStats(team) {
         pie: stats['PIE'],
     };
 }
+/**
+ * CLI progress reporter for displaying fetch operations status.
+ * Supports both human-readable and JSON output formats.
+ *
+ * @example
+ * ```typescript
+ * const reporter = new ProgressReporter({ quiet: false })
+ * reporter.logHeader('Fetching Data')
+ * reporter.logFetch('leagueLeaders', { season: '2024-25' })
+ * reporter.logSuccess('leagueLeaders', '/path/to/file.json')
+ * ```
+ */
 export class ProgressReporter {
     json;
     quiet;

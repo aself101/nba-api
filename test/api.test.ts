@@ -456,7 +456,422 @@ describe('NbaAPI', () => {
 
       const scoreboard = await api.getScoreboard('2025-01-15')
 
-      expect(scoreboard).toBeDefined()
+      expect(scoreboard).toHaveProperty('gameDate', '2025-01-15')
+      expect(scoreboard).toHaveProperty('leagueId', '00')
+      expect(scoreboard.games).toEqual([])
+    })
+  })
+
+  describe('getLeagueDashPlayerStats', () => {
+    it('should fetch league dashboard player stats', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguedashplayerstats',
+        statusCode: 200,
+        data: {
+          LeagueDashPlayerStats: [
+            {
+              PLAYER_ID: 2544,
+              PLAYER_NAME: 'LeBron James',
+              TEAM_ID: 1610612747,
+              GP: 50,
+              PTS: 1350,
+              REB: 400,
+              AST: 450,
+            },
+          ],
+        },
+        raw: {},
+      })
+
+      const stats = await api.getLeagueDashPlayerStats()
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'leaguedashplayerstats',
+        expect.objectContaining({
+          PerMode: 'Totals',
+          MeasureType: 'Base',
+          SeasonType: 'Regular Season',
+        }),
+        expect.any(Object)
+      )
+      expect(stats).toHaveLength(1)
+      expect(stats[0]).toHaveProperty('playerId', 2544)
+      expect(stats[0]).toHaveProperty('playerName', 'LeBron James')
+    })
+
+    it('should accept filter options', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguedashplayerstats',
+        statusCode: 200,
+        data: { LeagueDashPlayerStats: [] },
+        raw: {},
+      })
+
+      await api.getLeagueDashPlayerStats({
+        perMode: 'PerGame',
+        conference: 'West',
+        season: '2024-25',
+      })
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'leaguedashplayerstats',
+        expect.objectContaining({
+          PerMode: 'PerGame',
+          Conference: 'West',
+          Season: '2024-25',
+        }),
+        expect.any(Object)
+      )
+    })
+
+    it('should return empty array when no data', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguedashplayerstats',
+        statusCode: 200,
+        data: {},
+        raw: {},
+      })
+
+      const stats = await api.getLeagueDashPlayerStats()
+      expect(stats).toEqual([])
+    })
+  })
+
+  describe('getLeagueGameFinder', () => {
+    it('should search for games with default options', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguegamefinder',
+        statusCode: 200,
+        data: {
+          LeagueGameFinderResults: [
+            {
+              GAME_ID: '0022400123',
+              GAME_DATE: '2025-01-15',
+              TEAM_NAME: 'Lakers',
+              MATCHUP: 'LAL vs. GSW',
+              WL: 'W',
+              PTS: 115,
+            },
+          ],
+        },
+        raw: {},
+      })
+
+      const results = await api.getLeagueGameFinder()
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'leaguegamefinder',
+        expect.objectContaining({
+          PlayerOrTeam: 'T',
+          SeasonType: 'Regular Season',
+        }),
+        expect.any(Object)
+      )
+      expect(results).toHaveLength(1)
+      expect(results[0]).toHaveProperty('gameId', '0022400123')
+      expect(results[0]).toHaveProperty('wl', 'W')
+    })
+
+    it('should accept date range and team filters', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguegamefinder',
+        statusCode: 200,
+        data: { LeagueGameFinderResults: [] },
+        raw: {},
+      })
+
+      await api.getLeagueGameFinder({
+        teamId: 1610612747,
+        dateFrom: '2025-01-01',
+        dateTo: '2025-01-31',
+        outcome: 'W',
+      })
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'leaguegamefinder',
+        expect.objectContaining({
+          TeamID: 1610612747,
+          DateFrom: '2025-01-01',
+          DateTo: '2025-01-31',
+          Outcome: 'W',
+        }),
+        expect.any(Object)
+      )
+    })
+
+    it('should throw on invalid date format', async () => {
+      await expect(
+        api.getLeagueGameFinder({ dateFrom: 'invalid-date' })
+      ).rejects.toThrow('Invalid date format')
+    })
+
+    it('should return empty array when no matches', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguegamefinder',
+        statusCode: 200,
+        data: {},
+        raw: {},
+      })
+
+      const results = await api.getLeagueGameFinder()
+      expect(results).toEqual([])
+    })
+  })
+
+  describe('getLeagueGameLog', () => {
+    it('should fetch league game log', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguegamelog',
+        statusCode: 200,
+        data: {
+          LeagueGameLog: [
+            {
+              GAME_ID: '0022400123',
+              GAME_DATE: 'JAN 15, 2025',
+              TEAM_NAME: 'Lakers',
+              MATCHUP: 'LAL vs. GSW',
+              WL: 'W',
+              PTS: 115,
+            },
+            {
+              GAME_ID: '0022400124',
+              GAME_DATE: 'JAN 15, 2025',
+              TEAM_NAME: 'Warriors',
+              MATCHUP: 'GSW @ LAL',
+              WL: 'L',
+              PTS: 108,
+            },
+          ],
+        },
+        raw: {},
+      })
+
+      const log = await api.getLeagueGameLog('2024-25')
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'leaguegamelog',
+        expect.objectContaining({
+          Season: '2024-25',
+          SeasonType: 'Regular Season',
+          PlayerOrTeam: 'T',
+        }),
+        expect.any(Object)
+      )
+      expect(log).toHaveLength(2)
+      expect(log[0]).toHaveProperty('gameId', '0022400123')
+      expect(log[0]).toHaveProperty('teamName', 'Lakers')
+    })
+
+    it('should use current season when not specified', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguegamelog',
+        statusCode: 200,
+        data: { LeagueGameLog: [] },
+        raw: {},
+      })
+
+      await api.getLeagueGameLog()
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'leaguegamelog',
+        expect.objectContaining({
+          Season: expect.stringMatching(/^\d{4}-\d{2}$/),
+        }),
+        expect.any(Object)
+      )
+    })
+
+    it('should return empty array when no games', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/leaguegamelog',
+        statusCode: 200,
+        data: {},
+        raw: {},
+      })
+
+      const log = await api.getLeagueGameLog()
+      expect(log).toEqual([])
+    })
+  })
+
+  describe('getShotChartDetail', () => {
+    it('should fetch shot chart data for a player', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/shotchartdetail',
+        statusCode: 200,
+        data: {
+          Shot_Chart_Detail: [
+            {
+              PLAYER_ID: 2544,
+              GAME_ID: '0022400123',
+              LOC_X: 15,
+              LOC_Y: 80,
+              SHOT_MADE_FLAG: 1,
+              SHOT_TYPE: '3PT Field Goal',
+            },
+            {
+              PLAYER_ID: 2544,
+              GAME_ID: '0022400123',
+              LOC_X: -50,
+              LOC_Y: 40,
+              SHOT_MADE_FLAG: 0,
+              SHOT_TYPE: '2PT Field Goal',
+            },
+          ],
+        },
+        raw: {},
+      })
+
+      const shots = await api.getShotChartDetail({ playerId: 2544 })
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'shotchartdetail',
+        expect.objectContaining({
+          PlayerID: 2544,
+          ContextMeasure: 'FGA',
+        }),
+        expect.any(Object)
+      )
+      expect(shots).toHaveLength(2)
+      expect(shots[0]).toHaveProperty('playerId', 2544)
+      expect(shots[0]).toHaveProperty('locX', 15)
+      expect(shots[0]).toHaveProperty('shotMadeFlag', 1)
+    })
+
+    it('should accept season and team filters', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/shotchartdetail',
+        statusCode: 200,
+        data: { Shot_Chart_Detail: [] },
+        raw: {},
+      })
+
+      await api.getShotChartDetail({
+        playerId: 2544,
+        teamId: 1610612747,
+        season: '2024-25',
+        gameId: '0022400123',
+      })
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'shotchartdetail',
+        expect.objectContaining({
+          PlayerID: 2544,
+          TeamID: 1610612747,
+          Season: '2024-25',
+          GameID: '0022400123',
+        }),
+        expect.any(Object)
+      )
+    })
+
+    it('should throw on invalid player ID', async () => {
+      await expect(api.getShotChartDetail({ playerId: -1 })).rejects.toThrow(
+        'Invalid player ID'
+      )
+    })
+
+    it('should return empty array when no shots', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/shotchartdetail',
+        statusCode: 200,
+        data: {},
+        raw: {},
+      })
+
+      const shots = await api.getShotChartDetail({ playerId: 2544 })
+      expect(shots).toEqual([])
+    })
+  })
+
+  describe('getBoxScoreAdvanced', () => {
+    it('should fetch advanced box score', async () => {
+      // Mock _getGameInfo call (first fetchLive)
+      mockFetchLive.mockResolvedValueOnce({
+        url: 'https://cdn.nba.com/static/json/liveData/boxscore/boxscore_0022400123.json',
+        statusCode: 200,
+        data: {
+          game: {
+            gameId: '0022400123',
+            gameCode: '20250115/LALGSW',
+          },
+        },
+        raw: {},
+      })
+
+      // Mock box score advanced API call (fetchStats with returnRaw)
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/boxscoreadvancedv3',
+        statusCode: 200,
+        data: {},
+        raw: {
+          boxScoreAdvanced: {
+            gameId: '0022400123',
+            homeTeamId: 1610612747,
+            awayTeamId: 1610612744,
+            homeTeam: {
+              teamId: 1610612747,
+              teamCity: 'Los Angeles',
+              teamName: 'Lakers',
+              teamTricode: 'LAL',
+              players: [
+                {
+                  personId: 2544,
+                  firstName: 'LeBron',
+                  familyName: 'James',
+                  statistics: {
+                    offensiveRating: 118.5,
+                    defensiveRating: 105.2,
+                    netRating: 13.3,
+                    pace: 98.5,
+                    pie: 0.185,
+                  },
+                },
+              ],
+              statistics: {
+                offensiveRating: 115.0,
+                defensiveRating: 108.0,
+                pace: 98.5,
+              },
+            },
+            awayTeam: {
+              teamId: 1610612744,
+              teamCity: 'Golden State',
+              teamName: 'Warriors',
+              teamTricode: 'GSW',
+              players: [],
+              statistics: {
+                offensiveRating: 108.0,
+                defensiveRating: 115.0,
+                pace: 98.5,
+              },
+            },
+          },
+        },
+      })
+
+      const boxScore = await api.getBoxScoreAdvanced('0022400123')
+
+      expect(mockFetchStats).toHaveBeenCalledWith(
+        'boxscoreadvancedv3',
+        expect.objectContaining({ GameID: '0022400123' }),
+        expect.any(Object)
+      )
+      expect(boxScore.gameId).toBe('0022400123')
+      expect(boxScore.homeTeamId).toBe(1610612747)
+      expect(boxScore.gameCode).toBe('20250115/LALGSW')
+      expect(boxScore.gameDateEst).toBe('20250115')
+      expect(boxScore.playerStats).toHaveLength(1)
+      expect(boxScore.playerStats[0].playerId).toBe(2544)
+      expect(boxScore.playerStats[0].playerName).toBe('LeBron James')
+      expect(boxScore.teamStats).toHaveLength(2)
+      expect(boxScore.teamStats[0].teamName).toBe('Lakers')
+    })
+
+    it('should throw on invalid game ID', async () => {
+      await expect(api.getBoxScoreAdvanced('123')).rejects.toThrow(
+        'Invalid game ID'
+      )
     })
   })
 
@@ -559,14 +974,37 @@ describe('NbaAPI', () => {
         url: 'https://cdn.nba.com/static/json/liveData/odds/odds_todaysGames.json',
         statusCode: 200,
         data: {
-          odds: [],
+          games: [
+            {
+              gameId: '0022400123',
+              homeTeam: { spread: -5.5, moneyLine: -200 },
+              awayTeam: { spread: 5.5, moneyLine: 170 },
+            },
+          ],
         },
         raw: {},
       })
 
       const odds = await api.getLiveOdds()
 
-      expect(odds).toBeDefined()
+      expect(mockFetchLive).toHaveBeenCalledWith(
+        'odds/odds_todaysGames.json',
+        expect.any(Object)
+      )
+      expect(odds).toHaveProperty('games')
+      expect(Array.isArray(odds.games)).toBe(true)
+    })
+
+    it('should return empty structure when no odds available', async () => {
+      mockFetchLive.mockResolvedValueOnce({
+        url: 'https://cdn.nba.com/static/json/liveData/odds/odds_todaysGames.json',
+        statusCode: 200,
+        data: {},
+        raw: {},
+      })
+
+      const odds = await api.getLiveOdds()
+      expect(odds).toEqual({})
     })
   })
 

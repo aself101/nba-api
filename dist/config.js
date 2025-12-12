@@ -267,20 +267,42 @@ export function generateSeasonRange(startYear, endYear) {
 // URL Building
 // =============================================================================
 /**
+ * Sanitize a string for use in URL paths/parameters.
+ * Validates format and prevents path traversal attacks.
+ */
+function sanitizeUrlComponent(value, allowedPattern) {
+    // Check for path traversal attempts
+    if (value.includes('..')) {
+        throw new Error(`Invalid URL component: path traversal not allowed`);
+    }
+    // Check for disallowed characters
+    if (!allowedPattern.test(value)) {
+        throw new Error(`Invalid URL component: contains disallowed characters`);
+    }
+    return value;
+}
+// Pattern for valid endpoint names (alphanumeric, underscores, hyphens, dots for filenames, forward slash for paths, curly braces for placeholders)
+const ENDPOINT_PATTERN = /^[a-zA-Z0-9_./{}-]+$/;
+// Pattern for valid game IDs (10 digits only)
+const GAME_ID_PATTERN = /^\d{10}$/;
+/**
  * Build a full URL for a stats API endpoint with query parameters.
  * @param endpoint - The endpoint name (from ENDPOINTS)
  * @param params - Query parameters
  */
 export function buildStatsUrl(endpoint, params = {}) {
-    const url = new URL(`${STATS_BASE_URL}/${endpoint}`);
+    // Sanitize endpoint to prevent path traversal
+    const safeEndpoint = sanitizeUrlComponent(endpoint, ENDPOINT_PATTERN);
+    const url = new URL(`${STATS_BASE_URL}/${safeEndpoint}`);
     for (const [key, value] of Object.entries(params)) {
         if (value !== undefined && value !== null && value !== '') {
+            // URLSearchParams automatically encodes values, providing XSS protection
             url.searchParams.append(key, String(value));
         }
     }
     // Sort parameters alphabetically (NBA API can be sensitive to parameter order)
     const sortedParams = new URLSearchParams([...url.searchParams.entries()].sort((a, b) => a[0].localeCompare(b[0])));
-    return `${STATS_BASE_URL}/${endpoint}?${sortedParams.toString()}`;
+    return `${STATS_BASE_URL}/${safeEndpoint}?${sortedParams.toString()}`;
 }
 /**
  * Build a full URL for a live API endpoint.
@@ -288,8 +310,14 @@ export function buildStatsUrl(endpoint, params = {}) {
  * @param gameId - Optional game ID for endpoints that require it
  */
 export function buildLiveUrl(endpoint, gameId) {
-    let path = endpoint;
+    // Sanitize endpoint to prevent path traversal
+    const safeEndpoint = sanitizeUrlComponent(endpoint, ENDPOINT_PATTERN);
+    let path = safeEndpoint;
     if (gameId) {
+        // Validate gameId format before insertion
+        if (!GAME_ID_PATTERN.test(gameId)) {
+            throw new Error(`Invalid game ID format: ${gameId}`);
+        }
         path = path.replace('{game_id}', gameId);
     }
     return `${LIVE_BASE_URL}/${path}`;

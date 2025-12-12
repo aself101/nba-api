@@ -533,6 +533,66 @@ describe('File I/O', () => {
       expect(content).toBe('')
     })
 
+    describe('CSV injection prevention', () => {
+      it('should prefix formula trigger characters with single quote', () => {
+        const data = [
+          { name: '=SUM(A1:A10)', value: 1 },
+          { name: '+1234567890', value: 2 },
+          { name: '-1234', value: 3 },
+          { name: '@import', value: 4 },
+        ]
+        const filepath = path.join(testDir, 'injection.csv')
+
+        writeToFile(data, filepath)
+
+        const content = fs.readFileSync(filepath, 'utf-8')
+        expect(content).toContain("'=SUM(A1:A10)")
+        expect(content).toContain("'+1234567890")
+        expect(content).toContain("'-1234")
+        expect(content).toContain("'@import")
+      })
+
+      it('should prefix tab and carriage return triggers', () => {
+        const data = [
+          { name: '\tTabStart', value: 1 },
+          { name: '\rCRStart', value: 2 },
+        ]
+        const filepath = path.join(testDir, 'whitespace-injection.csv')
+
+        writeToFile(data, filepath)
+
+        const content = fs.readFileSync(filepath, 'utf-8')
+        expect(content).toContain("'\tTabStart")
+        expect(content).toContain("'\rCRStart")
+      })
+
+      it('should not prefix normal values', () => {
+        const data = [
+          { name: 'LeBron James', pts: 25 },
+          { name: 'Stephen Curry', pts: 28 },
+        ]
+        const filepath = path.join(testDir, 'normal.csv')
+
+        writeToFile(data, filepath)
+
+        const content = fs.readFileSync(filepath, 'utf-8')
+        expect(content).toContain('LeBron James')
+        expect(content).not.toContain("'LeBron")
+        expect(content).toContain('Stephen Curry')
+      })
+
+      it('should handle formula trigger with comma requiring quoting', () => {
+        const data = [{ name: '=HYPERLINK("http://evil.com", "Click me")' }]
+        const filepath = path.join(testDir, 'formula-comma.csv')
+
+        writeToFile(data, filepath)
+
+        const content = fs.readFileSync(filepath, 'utf-8')
+        // Should be prefixed AND quoted
+        expect(content).toContain("\"'=HYPERLINK")
+      })
+    })
+
     it('should use explicit format parameter over extension', () => {
       const data = [{ name: 'Test' }]
       const filepath = path.join(testDir, 'data.txt')
@@ -714,6 +774,21 @@ describe('HTTP Client', () => {
       fetchSpy.mockRejectedValue(new Error('Network error'))
 
       await expect(fetchStats('test', {}, { clientTier: 'tier1' })).rejects.toThrow('Network error')
+    })
+
+    it('should reject responses larger than 10MB', async () => {
+      // Create a response that exceeds 10MB
+      const largeData = 'x'.repeat(11 * 1024 * 1024) // 11MB
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        text: async () => largeData,
+      }
+      fetchSpy.mockResolvedValue(mockResponse as Response)
+
+      await expect(fetchStats('test', {}, { clientTier: 'tier1' })).rejects.toThrow(
+        /Response too large.*exceeds.*byte limit/
+      )
     })
 
     it('should include raw response in result', async () => {

@@ -227,5 +227,46 @@ describe('URL Building', () => {
         'https://cdn.nba.com/static/json/liveData/boxscore/boxscore_0022400001.json'
       )
     })
+
+    it('should reject invalid game ID format', () => {
+      expect(() => buildLiveUrl('boxscore/boxscore_{game_id}.json', 'invalid')).toThrow(
+        'Invalid game ID format'
+      )
+      expect(() => buildLiveUrl('boxscore/boxscore_{game_id}.json', '123')).toThrow(
+        'Invalid game ID format'
+      )
+    })
+  })
+
+  describe('URL sanitization', () => {
+    it('should reject endpoint with path traversal characters', () => {
+      expect(() => buildStatsUrl('../etc/passwd', {})).toThrow(
+        'path traversal not allowed'
+      )
+      expect(() => buildStatsUrl('endpoint/../../../etc', {})).toThrow(
+        'path traversal not allowed'
+      )
+    })
+
+    it('should reject endpoint with special characters', () => {
+      expect(() => buildStatsUrl('endpoint<script>', {})).toThrow(
+        'Invalid URL component'
+      )
+      expect(() => buildStatsUrl('endpoint;rm -rf', {})).toThrow(
+        'Invalid URL component'
+      )
+    })
+
+    it('should allow valid endpoint names', () => {
+      // These should not throw
+      expect(() => buildStatsUrl('playercareerstats', {})).not.toThrow()
+      expect(() => buildStatsUrl('boxscoretraditionalv3', {})).not.toThrow()
+      expect(() => buildStatsUrl('scoreboard/todaysScoreboard_00.json', {})).not.toThrow()
+    })
+
+    it('should allow valid live endpoints with dots and underscores', () => {
+      expect(() => buildLiveUrl('odds/odds_todaysGames.json')).not.toThrow()
+      expect(() => buildLiveUrl('scoreboard/todaysScoreboard_00.json')).not.toThrow()
+    })
   })
 })

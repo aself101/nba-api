@@ -19,6 +19,22 @@ import { writeToFile, randomPause, ProgressReporter } from './utils.js';
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 const DEFAULT_DATA_DIR = 'datasets';
+/**
+ * Helper to fetch data and save to file with consistent logging.
+ * Reduces repetitive try/catch blocks throughout the CLI.
+ */
+async function fetchAndSave(reporter, endpointName, headerName, fetchFn, filepath, params) {
+    reporter.logHeader(headerName);
+    try {
+        reporter.logFetch(endpointName, params);
+        const data = await fetchFn();
+        writeToFile(data, filepath);
+        reporter.logSuccess(endpointName, filepath);
+    }
+    catch (error) {
+        reporter.logError(endpointName, error.message);
+    }
+}
 program
     .name('nba')
     .description('NBA Stats and Live API data fetcher')
@@ -351,24 +367,18 @@ async function main() {
         const seasonType = opts.seasonType ?? SeasonType.REGULAR;
         // ========== LIVE ENDPOINTS (no season iteration) ==========
         if (opts.liveScoreboard) {
-            reporter.logHeader('Live Scoreboard');
-            try {
-                reporter.logFetch('liveScoreboard');
-                const data = await api.getLiveScoreboard();
-                const filepath = `${outputDir}/nba/live/scoreboard.json`;
-                writeToFile(data, filepath);
-                reporter.logSuccess('liveScoreboard', filepath);
-            }
-            catch (error) {
-                reporter.logError('liveScoreboard', error.message);
-            }
+            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            await fetchAndSave(reporter, 'liveScoreboard', 'Live Scoreboard', () => api.getLiveScoreboard(), `${outputDir}/nba/live/scoreboard/scoreboard_${dateStr}.json`);
         }
         if (opts.liveBoxScore && opts.gameId) {
             reporter.logHeader('Live Box Score');
             try {
                 reporter.logFetch('liveBoxScore', { gameId: opts.gameId });
                 const data = await api.getLiveBoxScore(opts.gameId);
-                const filepath = `${outputDir}/nba/live/boxscore_${opts.gameId}.json`;
+                // Use gameCode for filename: "20241225/SASNYK" -> boxscore_SASNYK_20241225.json
+                const [date, teams] = data.gameCode ? data.gameCode.split('/') : ['', ''];
+                const filename = teams && date ? `boxscore_${teams}_${date}.json` : `boxscore_${opts.gameId}.json`;
+                const filepath = `${outputDir}/nba/live/boxscore/${filename}`;
                 writeToFile(data, filepath);
                 reporter.logSuccess('liveBoxScore', filepath);
             }
@@ -380,8 +390,13 @@ async function main() {
             reporter.logHeader('Live Play By Play');
             try {
                 reporter.logFetch('livePlayByPlay', { gameId: opts.gameId });
+                // Fetch live box score first to get gameCode (play by play response doesn't include it)
+                const boxScore = await api.getLiveBoxScore(opts.gameId);
                 const data = await api.getLivePlayByPlay(opts.gameId);
-                const filepath = `${outputDir}/nba/live/playbyplay_${opts.gameId}.json`;
+                // Use gameCode for filename: "20241225/SASNYK" -> playbyplay_SASNYK_20241225.json
+                const [date, teams] = boxScore.gameCode ? boxScore.gameCode.split('/') : ['', ''];
+                const filename = teams && date ? `playbyplay_${teams}_${date}.json` : `playbyplay_${opts.gameId}.json`;
+                const filepath = `${outputDir}/nba/live/playbyplay/${filename}`;
                 writeToFile(data, filepath);
                 reporter.logSuccess('livePlayByPlay', filepath);
             }
@@ -390,17 +405,8 @@ async function main() {
             }
         }
         if (opts.liveOdds) {
-            reporter.logHeader('Live Odds');
-            try {
-                reporter.logFetch('liveOdds');
-                const data = await api.getLiveOdds();
-                const filepath = `${outputDir}/nba/live/odds.json`;
-                writeToFile(data, filepath);
-                reporter.logSuccess('liveOdds', filepath);
-            }
-            catch (error) {
-                reporter.logError('liveOdds', error.message);
-            }
+            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            await fetchAndSave(reporter, 'liveOdds', 'Live Odds', () => api.getLiveOdds(), `${outputDir}/nba/live/odds/odds_${dateStr}.json`);
         }
         // ========== GAME-SPECIFIC ENDPOINTS (no season iteration) ==========
         if (opts.boxScore && opts.gameId) {
@@ -436,72 +442,21 @@ async function main() {
             }
         }
         if (opts.playByPlay && opts.gameId) {
-            reporter.logHeader('Play By Play');
-            try {
-                reporter.logFetch('playByPlay', { gameId: opts.gameId });
-                const data = await api.getPlayByPlay(opts.gameId);
-                const filepath = `${outputDir}/nba/playbyplay/pbp_${opts.gameId}.json`;
-                writeToFile(data, filepath);
-                reporter.logSuccess('playByPlay', filepath);
-            }
-            catch (error) {
-                reporter.logError('playByPlay', error.message);
-            }
+            await fetchAndSave(reporter, 'playByPlay', 'Play By Play', () => api.getPlayByPlay(opts.gameId), `${outputDir}/nba/playbyplay/pbp_${opts.gameId}.json`, { gameId: opts.gameId });
         }
         if (opts.scoreboard) {
-            reporter.logHeader('Scoreboard');
-            try {
-                const date = opts.gameDate;
-                reporter.logFetch('scoreboard', { date });
-                const data = await api.getScoreboard(date);
-                const dateStr = date ?? 'today';
-                const filepath = `${outputDir}/nba/scoreboard/scoreboard_${dateStr}.json`;
-                writeToFile(data, filepath);
-                reporter.logSuccess('scoreboard', filepath);
-            }
-            catch (error) {
-                reporter.logError('scoreboard', error.message);
-            }
+            const dateStr = opts.gameDate ?? 'today';
+            await fetchAndSave(reporter, 'scoreboard', 'Scoreboard', () => api.getScoreboard(opts.gameDate), `${outputDir}/nba/scoreboard/scoreboard_${dateStr}.json`, { date: opts.gameDate });
         }
         // ========== PLAYER-SPECIFIC ENDPOINTS (no season iteration) ==========
         if (opts.playerCareer && opts.playerId) {
-            reporter.logHeader('Player Career Stats');
-            try {
-                reporter.logFetch('playerCareerStats', { playerId: opts.playerId });
-                const data = await api.getPlayerCareerStats(opts.playerId);
-                const filepath = `${outputDir}/nba/player/${opts.playerId}/career.json`;
-                writeToFile(data, filepath);
-                reporter.logSuccess('playerCareerStats', filepath);
-            }
-            catch (error) {
-                reporter.logError('playerCareerStats', error.message);
-            }
+            await fetchAndSave(reporter, 'playerCareerStats', 'Player Career Stats', () => api.getPlayerCareerStats(opts.playerId), `${outputDir}/nba/player/${opts.playerId}/career.json`, { playerId: opts.playerId });
         }
         if (opts.playerInfo && opts.playerId) {
-            reporter.logHeader('Player Info');
-            try {
-                reporter.logFetch('commonPlayerInfo', { playerId: opts.playerId });
-                const data = await api.getCommonPlayerInfo(opts.playerId);
-                const filepath = `${outputDir}/nba/player/${opts.playerId}/info.json`;
-                writeToFile(data, filepath);
-                reporter.logSuccess('commonPlayerInfo', filepath);
-            }
-            catch (error) {
-                reporter.logError('commonPlayerInfo', error.message);
-            }
+            await fetchAndSave(reporter, 'commonPlayerInfo', 'Player Info', () => api.getCommonPlayerInfo(opts.playerId), `${outputDir}/nba/player/${opts.playerId}/info.json`, { playerId: opts.playerId });
         }
         if (opts.teamHistory && opts.teamId) {
-            reporter.logHeader('Team Year-by-Year Stats');
-            try {
-                reporter.logFetch('teamYearByYearStats', { teamId: opts.teamId });
-                const data = await api.getTeamYearByYearStats(opts.teamId);
-                const filepath = `${outputDir}/nba/team/${opts.teamId}/history.json`;
-                writeToFile(data, filepath);
-                reporter.logSuccess('teamYearByYearStats', filepath);
-            }
-            catch (error) {
-                reporter.logError('teamYearByYearStats', error.message);
-            }
+            await fetchAndSave(reporter, 'teamYearByYearStats', 'Team Year-by-Year Stats', () => api.getTeamYearByYearStats(opts.teamId), `${outputDir}/nba/team/${opts.teamId}/history.json`, { teamId: opts.teamId });
         }
         if (opts.draftHistory) {
             reporter.logHeader('Draft History');
