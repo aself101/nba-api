@@ -25,6 +25,10 @@ import {
   createLogger,
   createPuppeteerClient,
   normalizeKeys,
+  normalizeV3PlayerStats,
+  normalizeV3TeamStats,
+  normalizeV3AdvancedPlayerStats,
+  normalizeV3AdvancedTeamStats,
 } from './utils.js'
 import { teams, findTeamById, findTeamByAbbreviation, findTeamsByName } from './data/teams.js'
 import {
@@ -801,31 +805,19 @@ export class NbaAPI {
     const homeTeam = (boxScore['homeTeam'] ?? {}) as Record<string, unknown>
     const awayTeam = (boxScore['awayTeam'] ?? {}) as Record<string, unknown>
 
-    // Extract and flatten player stats from both teams
-    const homePlayers = ((homeTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
-      ...normalizeKeys(p),
-      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
-      teamId: homeTeam['teamId'],
-      teamAbbreviation: homeTeam['teamTricode'],
-    }))
-    const awayPlayers = ((awayTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
-      ...normalizeKeys(p),
-      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
-      teamId: awayTeam['teamId'],
-      teamAbbreviation: awayTeam['teamTricode'],
-    }))
+    // Extract and normalize player stats from both teams using V3 normalization
+    const homePlayers = ((homeTeam['players'] ?? []) as Record<string, unknown>[]).map((p) =>
+      normalizeV3PlayerStats(p, homeTeam)
+    )
+    const awayPlayers = ((awayTeam['players'] ?? []) as Record<string, unknown>[]).map((p) =>
+      normalizeV3PlayerStats(p, awayTeam)
+    )
 
     const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, [...homePlayers, ...awayPlayers])
 
-    // Extract team stats
-    const homeTeamStats = {
-      ...normalizeKeys(homeTeam),
-      ...normalizeKeys((homeTeam['statistics'] ?? {}) as Record<string, unknown>),
-    }
-    const awayTeamStats = {
-      ...normalizeKeys(awayTeam),
-      ...normalizeKeys((awayTeam['statistics'] ?? {}) as Record<string, unknown>),
-    }
+    // Extract and normalize team stats using V3 normalization
+    const homeTeamStats = normalizeV3TeamStats(homeTeam)
+    const awayTeamStats = normalizeV3TeamStats(awayTeam)
     const teamStats = parseArraySafe(BoxScoreTeamStatsSchema, [homeTeamStats, awayTeamStats])
 
     return {
@@ -860,31 +852,20 @@ export class NbaAPI {
     const homeTeam = (boxScore['homeTeam'] ?? {}) as Record<string, unknown>
     const awayTeam = (boxScore['awayTeam'] ?? {}) as Record<string, unknown>
 
-    // Extract and flatten player stats from both teams
-    const homePlayers = ((homeTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
-      ...normalizeKeys(p),
-      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
-      teamId: homeTeam['teamId'],
-      teamAbbreviation: homeTeam['teamTricode'],
-    }))
-    const awayPlayers = ((awayTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
-      ...normalizeKeys(p),
-      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
-      teamId: awayTeam['teamId'],
-      teamAbbreviation: awayTeam['teamTricode'],
-    }))
+    // Extract and normalize player stats from both teams using V3 advanced normalization
+    const homePlayers = ((homeTeam['players'] ?? []) as Record<string, unknown>[]).map((p) =>
+      normalizeV3AdvancedPlayerStats(p, homeTeam)
+    )
+    const awayPlayers = ((awayTeam['players'] ?? []) as Record<string, unknown>[]).map((p) =>
+      normalizeV3AdvancedPlayerStats(p, awayTeam)
+    )
 
-    const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, [...homePlayers, ...awayPlayers])
+    // Advanced stats have different fields, return as-is without traditional schema validation
+    const playerStats = [...homePlayers, ...awayPlayers]
 
-    // Extract team stats
-    const homeTeamStats = {
-      ...normalizeKeys(homeTeam),
-      ...normalizeKeys((homeTeam['statistics'] ?? {}) as Record<string, unknown>),
-    }
-    const awayTeamStats = {
-      ...normalizeKeys(awayTeam),
-      ...normalizeKeys((awayTeam['statistics'] ?? {}) as Record<string, unknown>),
-    }
+    // Extract and normalize team stats using V3 advanced normalization
+    const homeTeamStats = normalizeV3AdvancedTeamStats(homeTeam)
+    const awayTeamStats = normalizeV3AdvancedTeamStats(awayTeam)
 
     return {
       gameId: (boxScore['gameId'] as string) ?? gameId,

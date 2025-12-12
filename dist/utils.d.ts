@@ -111,6 +111,24 @@ import type { LogLevel } from './types.js';
  * Create a Winston logger instance.
  */
 export declare function createLogger(level?: LogLevel): winston.Logger;
+/**
+ * Normalize V3 box score player data to match expected schema format.
+ * V3 uses different field names: personId -> playerId, firstName+familyName -> playerName, etc.
+ */
+export declare function normalizeV3PlayerStats(player: Record<string, unknown>, team: Record<string, unknown>): Record<string, unknown>;
+/**
+ * Normalize V3 box score team data to match expected schema format.
+ */
+export declare function normalizeV3TeamStats(team: Record<string, unknown>): Record<string, unknown>;
+/**
+ * Normalize V3 advanced box score player data to match expected schema format.
+ * Advanced stats have different fields: offensive/defensive rating, pace, PIE, etc.
+ */
+export declare function normalizeV3AdvancedPlayerStats(player: Record<string, unknown>, team: Record<string, unknown>): Record<string, unknown>;
+/**
+ * Normalize V3 advanced box score team data to match expected schema format.
+ */
+export declare function normalizeV3AdvancedTeamStats(team: Record<string, unknown>): Record<string, unknown>;
 export interface ProgressReporterOptions {
     json?: boolean;
     quiet?: boolean;

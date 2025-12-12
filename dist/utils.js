@@ -370,6 +370,172 @@ export function createLogger(level = 'INFO') {
         silent: level === 'NONE',
     });
 }
+// =============================================================================
+// V3 Box Score Normalization
+// =============================================================================
+/**
+ * Normalize V3 box score player data to match expected schema format.
+ * V3 uses different field names: personId -> playerId, firstName+familyName -> playerName, etc.
+ */
+export function normalizeV3PlayerStats(player, team) {
+    const stats = (player['statistics'] ?? {});
+    return {
+        // Player identification
+        playerId: player['personId'],
+        playerName: `${player['firstName'] ?? ''} ${player['familyName'] ?? ''}`.trim(),
+        playerNameI: player['nameI'],
+        jerseyNum: player['jerseyNum'],
+        position: player['position'],
+        startPosition: player['position'],
+        comment: player['comment'],
+        // Team info
+        teamId: team['teamId'],
+        teamCity: team['teamCity'],
+        teamName: team['teamName'],
+        teamAbbreviation: team['teamTricode'],
+        // Statistics (remap V3 names to expected names)
+        minutes: stats['minutes'],
+        fieldGoalsMade: stats['fieldGoalsMade'],
+        fieldGoalsAttempted: stats['fieldGoalsAttempted'],
+        fieldGoalPct: stats['fieldGoalsPercentage'],
+        threePointersMade: stats['threePointersMade'],
+        threePointersAttempted: stats['threePointersAttempted'],
+        threePointPct: stats['threePointersPercentage'],
+        freeThrowsMade: stats['freeThrowsMade'],
+        freeThrowsAttempted: stats['freeThrowsAttempted'],
+        freeThrowPct: stats['freeThrowsPercentage'],
+        offensiveRebounds: stats['reboundsOffensive'],
+        defensiveRebounds: stats['reboundsDefensive'],
+        rebounds: stats['reboundsTotal'],
+        assists: stats['assists'],
+        steals: stats['steals'],
+        blocks: stats['blocks'],
+        turnovers: stats['turnovers'],
+        personalFouls: stats['foulsPersonal'],
+        points: stats['points'],
+        plusMinus: stats['plusMinusPoints'],
+    };
+}
+/**
+ * Normalize V3 box score team data to match expected schema format.
+ */
+export function normalizeV3TeamStats(team) {
+    const stats = (team['statistics'] ?? {});
+    return {
+        // Team identification
+        teamId: team['teamId'],
+        teamCity: team['teamCity'],
+        teamName: team['teamName'],
+        teamAbbreviation: team['teamTricode'],
+        teamSlug: team['teamSlug'],
+        // Statistics (remap V3 names to expected names)
+        minutes: stats['minutes'],
+        fieldGoalsMade: stats['fieldGoalsMade'],
+        fieldGoalsAttempted: stats['fieldGoalsAttempted'],
+        fieldGoalPct: stats['fieldGoalsPercentage'],
+        threePointersMade: stats['threePointersMade'],
+        threePointersAttempted: stats['threePointersAttempted'],
+        threePointPct: stats['threePointersPercentage'],
+        freeThrowsMade: stats['freeThrowsMade'],
+        freeThrowsAttempted: stats['freeThrowsAttempted'],
+        freeThrowPct: stats['freeThrowsPercentage'],
+        offensiveRebounds: stats['reboundsOffensive'],
+        defensiveRebounds: stats['reboundsDefensive'],
+        rebounds: stats['reboundsTotal'],
+        assists: stats['assists'],
+        steals: stats['steals'],
+        blocks: stats['blocks'],
+        turnovers: stats['turnovers'],
+        personalFouls: stats['foulsPersonal'],
+        points: stats['points'],
+        plusMinus: stats['plusMinusPoints'],
+    };
+}
+/**
+ * Normalize V3 advanced box score player data to match expected schema format.
+ * Advanced stats have different fields: offensive/defensive rating, pace, PIE, etc.
+ */
+export function normalizeV3AdvancedPlayerStats(player, team) {
+    const stats = (player['statistics'] ?? {});
+    return {
+        // Player identification
+        playerId: player['personId'],
+        playerName: `${player['firstName'] ?? ''} ${player['familyName'] ?? ''}`.trim(),
+        playerNameI: player['nameI'],
+        jerseyNum: player['jerseyNum'],
+        position: player['position'],
+        startPosition: player['position'],
+        comment: player['comment'],
+        // Team info
+        teamId: team['teamId'],
+        teamCity: team['teamCity'],
+        teamName: team['teamName'],
+        teamAbbreviation: team['teamTricode'],
+        // Advanced statistics
+        minutes: stats['minutes'],
+        estimatedOffensiveRating: stats['estimatedOffensiveRating'],
+        offensiveRating: stats['offensiveRating'],
+        estimatedDefensiveRating: stats['estimatedDefensiveRating'],
+        defensiveRating: stats['defensiveRating'],
+        estimatedNetRating: stats['estimatedNetRating'],
+        netRating: stats['netRating'],
+        assistPercentage: stats['assistPercentage'],
+        assistToTurnover: stats['assistToTurnover'],
+        assistRatio: stats['assistRatio'],
+        offensiveReboundPercentage: stats['offensiveReboundPercentage'],
+        defensiveReboundPercentage: stats['defensiveReboundPercentage'],
+        reboundPercentage: stats['reboundPercentage'],
+        turnoverRatio: stats['turnoverRatio'],
+        effectiveFieldGoalPercentage: stats['effectiveFieldGoalPercentage'],
+        trueShootingPercentage: stats['trueShootingPercentage'],
+        usagePercentage: stats['usagePercentage'],
+        estimatedUsagePercentage: stats['estimatedUsagePercentage'],
+        estimatedPace: stats['estimatedPace'],
+        pace: stats['pace'],
+        pacePer40: stats['pacePer40'],
+        possessions: stats['possessions'],
+        pie: stats['PIE'],
+    };
+}
+/**
+ * Normalize V3 advanced box score team data to match expected schema format.
+ */
+export function normalizeV3AdvancedTeamStats(team) {
+    const stats = (team['statistics'] ?? {});
+    return {
+        // Team identification
+        teamId: team['teamId'],
+        teamCity: team['teamCity'],
+        teamName: team['teamName'],
+        teamAbbreviation: team['teamTricode'],
+        teamSlug: team['teamSlug'],
+        // Advanced statistics
+        minutes: stats['minutes'],
+        estimatedOffensiveRating: stats['estimatedOffensiveRating'],
+        offensiveRating: stats['offensiveRating'],
+        estimatedDefensiveRating: stats['estimatedDefensiveRating'],
+        defensiveRating: stats['defensiveRating'],
+        estimatedNetRating: stats['estimatedNetRating'],
+        netRating: stats['netRating'],
+        assistPercentage: stats['assistPercentage'],
+        assistToTurnover: stats['assistToTurnover'],
+        assistRatio: stats['assistRatio'],
+        offensiveReboundPercentage: stats['offensiveReboundPercentage'],
+        defensiveReboundPercentage: stats['defensiveReboundPercentage'],
+        reboundPercentage: stats['reboundPercentage'],
+        estimatedTeamTurnoverPercentage: stats['estimatedTeamTurnoverPercentage'],
+        turnoverRatio: stats['turnoverRatio'],
+        effectiveFieldGoalPercentage: stats['effectiveFieldGoalPercentage'],
+        trueShootingPercentage: stats['trueShootingPercentage'],
+        usagePercentage: stats['usagePercentage'],
+        estimatedUsagePercentage: stats['estimatedUsagePercentage'],
+        estimatedPace: stats['estimatedPace'],
+        pace: stats['pace'],
+        pacePer40: stats['pacePer40'],
+        possessions: stats['possessions'],
+        pie: stats['PIE'],
+    };
+}
 export class ProgressReporter {
     json;
     quiet;

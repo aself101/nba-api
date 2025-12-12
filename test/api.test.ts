@@ -640,21 +640,42 @@ describe('NbaAPI', () => {
 
   describe('getBoxScoreTraditional', () => {
     it('should fetch traditional box score', async () => {
+      // V3 box score uses raw response with specific field names
       mockFetchStats.mockResolvedValueOnce({
         url: 'https://stats.nba.com/stats/boxscoretraditionalv3',
         statusCode: 200,
-        data: {
+        data: {},
+        raw: {
           boxScoreTraditional: {
             gameId: '0022400123',
+            homeTeamId: 1610612747,
+            awayTeamId: 1610612738,
             homeTeam: {
+              teamId: 1610612747,
+              teamCity: 'Los Angeles',
               teamName: 'Lakers',
+              teamTricode: 'LAL',
               players: [
-                { name: 'LeBron James', points: 30 },
+                {
+                  personId: 2544,
+                  firstName: 'LeBron',
+                  familyName: 'James',
+                  nameI: 'L. James',
+                  statistics: { points: 30, rebounds: 10, assists: 8 },
+                },
               ],
+              statistics: { points: 110, rebounds: 45 },
+            },
+            awayTeam: {
+              teamId: 1610612738,
+              teamCity: 'Boston',
+              teamName: 'Celtics',
+              teamTricode: 'BOS',
+              players: [],
+              statistics: { points: 105, rebounds: 40 },
             },
           },
         },
-        raw: {},
       })
 
       const boxScore = await api.getBoxScoreTraditional('0022400123')
@@ -665,6 +686,12 @@ describe('NbaAPI', () => {
         expect.any(Object)
       )
       expect(boxScore).toBeDefined()
+      expect(boxScore.gameId).toBe('0022400123')
+      expect(boxScore.playerStats).toHaveLength(1)
+      expect(boxScore.playerStats[0].playerId).toBe(2544)
+      expect(boxScore.playerStats[0].playerName).toBe('LeBron James')
+      expect(boxScore.teamStats).toHaveLength(2)
+      expect(boxScore.teamStats[0].teamName).toBe('Lakers')
     })
   })
 
