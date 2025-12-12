@@ -766,32 +766,46 @@ Data is saved to `datasets/` by default, organized by category:
 datasets/
 ├── nba/
 │   ├── live/
-│   │   ├── scoreboard.json
-│   │   ├── odds.json
-│   │   ├── boxscore_0022400123.json
-│   │   └── playbyplay_0022400123.json
+│   │   ├── scoreboard/
+│   │   │   └── scoreboard_20250115.json
+│   │   ├── odds/
+│   │   │   └── odds_20250115.json
+│   │   ├── boxscore/
+│   │   │   └── boxscore_LALNYK_20250115.json
+│   │   └── playbyplay/
+│   │       └── playbyplay_LALNYK_20250115.json
 │   ├── player/
 │   │   └── 2544/
 │   │       ├── career.json
 │   │       ├── info.json
-│   │       └── gamelog_2024-25.json
+│   │       └── gamelog/
+│   │           └── gamelog_2024-25.json
 │   ├── players/
-│   │   ├── all_players_2024-25.json
-│   │   └── metrics_2024-25.json
+│   │   ├── allplayers/
+│   │   │   └── all_players_2024-25.json
+│   │   └── metrics/
+│   │       └── metrics_2024-25.json
 │   ├── team/
 │   │   └── 1610612747/
-│   │       ├── roster_2024-25.json
-│   │       ├── gamelog_2024-25.json
-│   │       ├── info_2024-25.json
-│   │       └── history.json
+│   │       ├── history.json
+│   │       ├── roster/
+│   │       │   └── roster_2024-25.json
+│   │       ├── gamelog/
+│   │       │   └── gamelog_2024-25.json
+│   │       └── info/
+│   │           └── info_2024-25.json
 │   ├── league/
-│   │   ├── leaders_PTS_2024-25.json
-│   │   ├── dash_players_2024-25.json
-│   │   ├── standings_2024-25.json
-│   │   └── gamelog_2024-25.json
+│   │   ├── leaders/
+│   │   │   └── leaders_PTS_2024-25.json
+│   │   ├── dashplayers/
+│   │   │   └── dash_players_2024-25.json
+│   │   ├── standings/
+│   │   │   └── standings_2024-25.json
+│   │   └── gamelog/
+│   │       └── gamelog_2024-25.json
 │   ├── boxscore/
-│   │   ├── traditional_0022400123.json
-│   │   └── advanced_0022400123.json
+│   │   ├── traditional_LALNYK_20250115.json
+│   │   └── advanced_LALNYK_20250115.json
 │   ├── playbyplay/
 │   │   └── pbp_0022400123.json
 │   ├── shotchart/
