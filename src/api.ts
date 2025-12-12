@@ -67,6 +67,7 @@ import type {
   PlayerCareerOptions,
   LeagueDashOptions,
   GameFinderOptions,
+  ShotChartOptions,
 } from './types.js'
 import {
   PlayerCareerStatsSchema,
@@ -902,9 +903,12 @@ export class NbaAPI {
   async getPlayByPlay(gameId: string): Promise<PlayByPlayAction[]> {
     validateGameId(gameId)
 
+    // Legacy playbyplay endpoint requires StartPeriod and EndPeriod params
     const data = await this._fetchStats(ENDPOINTS.PLAY_BY_PLAY, {
       GameID: gameId,
       LeagueID: LeagueID.NBA,
+      StartPeriod: 0,
+      EndPeriod: 14, // Covers all possible periods including OT
     })
 
     const resultSet = data['PlayByPlay'] ?? []
@@ -917,17 +921,31 @@ export class NbaAPI {
 
   /**
    * Get shot chart detail for a player.
-   * @param playerId - NBA player ID
-   * @param teamId - NBA team ID
-   * @param season - Season in "YYYY-YY" format (default: current)
+   * @param options - Shot chart options (playerId required, others optional)
    */
-  async getShotChartDetail(
-    playerId: number,
-    teamId: number,
-    season?: string
-  ): Promise<ShotChartShot[]> {
+  async getShotChartDetail(options: ShotChartOptions): Promise<ShotChartShot[]> {
+    const {
+      playerId,
+      teamId = 0,
+      season,
+      seasonType = SeasonType.REGULAR,
+      gameId = '',
+      contextMeasure = 'FGA',
+      dateFrom = '',
+      dateTo = '',
+      gameSegment = '',
+      lastNGames = 0,
+      location = '',
+      month = 0,
+      opponentTeamId = 0,
+      outcome = '',
+      period = 0,
+      vsConference = '',
+      vsDivision = '',
+    } = options
+
     validatePlayerId(playerId)
-    validateTeamId(teamId)
+    if (teamId) validateTeamId(teamId)
     const resolvedSeason = season ?? getCurrentSeason()
     validateSeason(resolvedSeason)
 
@@ -935,24 +953,24 @@ export class NbaAPI {
       PlayerID: playerId,
       TeamID: teamId,
       Season: resolvedSeason,
-      SeasonType: SeasonType.REGULAR,
+      SeasonType: seasonType,
       LeagueID: LeagueID.NBA,
-      ContextMeasure: 'FGA',
+      ContextMeasure: contextMeasure,
       PlayerPosition: '',
-      DateFrom: '',
-      DateTo: '',
-      GameID: '',
-      GameSegment: '',
-      LastNGames: 0,
-      Location: '',
-      Month: 0,
-      OpponentTeamID: 0,
-      Outcome: '',
-      Period: 0,
+      DateFrom: dateFrom,
+      DateTo: dateTo,
+      GameID: gameId,
+      GameSegment: gameSegment,
+      LastNGames: lastNGames,
+      Location: location,
+      Month: month,
+      OpponentTeamID: opponentTeamId,
+      Outcome: outcome,
+      Period: period,
       RookieYear: '',
       SeasonSegment: '',
-      VsConference: '',
-      VsDivision: '',
+      VsConference: vsConference,
+      VsDivision: vsDivision,
     })
 
     const resultSet = data['Shot_Chart_Detail'] ?? []

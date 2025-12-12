@@ -1095,6 +1095,26 @@ export interface GameFinderOptions {
   dateTo?: string
 }
 
+export interface ShotChartOptions {
+  playerId: number
+  teamId?: number
+  season?: string
+  seasonType?: string
+  gameId?: string
+  contextMeasure?: string
+  dateFrom?: string
+  dateTo?: string
+  gameSegment?: string
+  lastNGames?: number
+  location?: string
+  month?: number
+  opponentTeamId?: number
+  outcome?: string
+  period?: number
+  vsConference?: string
+  vsDivision?: string
+}
+
 // =============================================================================
 // CLI Types
 // =============================================================================

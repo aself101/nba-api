@@ -63,7 +63,7 @@ export const ENDPOINTS = {
     SCOREBOARD: 'scoreboardv3',
     BOX_SCORE_TRADITIONAL: 'boxscoretraditionalv3',
     BOX_SCORE_ADVANCED: 'boxscoreadvancedv3',
-    PLAY_BY_PLAY: 'playbyplayv3',
+    PLAY_BY_PLAY: 'playbyplay',
     // Other endpoints
     SHOT_CHART_DETAIL: 'shotchartdetail',
     DRAFT_HISTORY: 'drafthistory',

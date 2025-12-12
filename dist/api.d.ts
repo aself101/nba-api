@@ -3,7 +3,7 @@
  *
  * TypeScript wrapper for NBA Stats and Live APIs.
  */
-import type { NbaAPIOptions, Player, Team, PlayerCareerStats, PlayerGameLog, CommonPlayerInfo, PlayerSummary, PlayerEstimatedMetrics, TeamRoster, TeamGameLog, TeamInfoCommon, TeamYearByYearStats, LeagueLeader, LeagueDashPlayerStats, LeagueStanding, GameFinderResult, LeagueGameLogEntry, Scoreboard, BoxScoreTraditional, BoxScoreAdvanced, PlayByPlayAction, ShotChartShot, DraftHistoryEntry, LiveScoreboard, LiveBoxScore, LivePlayByPlay, LiveOdds, PlayerCareerOptions, LeagueDashOptions, GameFinderOptions } from './types.js';
+import type { NbaAPIOptions, Player, Team, PlayerCareerStats, PlayerGameLog, CommonPlayerInfo, PlayerSummary, PlayerEstimatedMetrics, TeamRoster, TeamGameLog, TeamInfoCommon, TeamYearByYearStats, LeagueLeader, LeagueDashPlayerStats, LeagueStanding, GameFinderResult, LeagueGameLogEntry, Scoreboard, BoxScoreTraditional, BoxScoreAdvanced, PlayByPlayAction, ShotChartShot, DraftHistoryEntry, LiveScoreboard, LiveBoxScore, LivePlayByPlay, LiveOdds, PlayerCareerOptions, LeagueDashOptions, GameFinderOptions, ShotChartOptions } from './types.js';
 export * from './types.js';
 export * from './config.js';
 export { teams, findTeamById, findTeamByAbbreviation, findTeamsByName, findTeamsByCity, findTeamsByState, } from './data/teams.js';
@@ -152,11 +152,9 @@ export declare class NbaAPI {
     getPlayByPlay(gameId: string): Promise<PlayByPlayAction[]>;
     /**
      * Get shot chart detail for a player.
-     * @param playerId - NBA player ID
-     * @param teamId - NBA team ID
-     * @param season - Season in "YYYY-YY" format (default: current)
+     * @param options - Shot chart options (playerId required, others optional)
      */
-    getShotChartDetail(playerId: number, teamId: number, season?: string): Promise<ShotChartShot[]>;
+    getShotChartDetail(options: ShotChartOptions): Promise<ShotChartShot[]>;
     /**
      * Get NBA draft history.
      * @param season - Season year (e.g., 2024 for 2024 draft)

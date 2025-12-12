@@ -25,7 +25,7 @@ export declare const ENDPOINTS: {
     readonly SCOREBOARD: "scoreboardv3";
     readonly BOX_SCORE_TRADITIONAL: "boxscoretraditionalv3";
     readonly BOX_SCORE_ADVANCED: "boxscoreadvancedv3";
-    readonly PLAY_BY_PLAY: "playbyplayv3";
+    readonly PLAY_BY_PLAY: "playbyplay";
     readonly SHOT_CHART_DETAIL: "shotchartdetail";
     readonly DRAFT_HISTORY: "drafthistory";
     readonly LIVE_SCOREBOARD: "scoreboard/todaysScoreboard_00.json";

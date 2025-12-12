@@ -680,10 +680,14 @@ async function main(): Promise<void> {
         }
       }
 
-      if (opts.shotChart && opts.playerId && opts.teamId) {
+      if (opts.shotChart && opts.playerId) {
         try {
           reporter.logFetch('shotChartDetail', { playerId: opts.playerId, teamId: opts.teamId, season })
-          const data = await api.getShotChartDetail(opts.playerId, opts.teamId, season)
+          const data = await api.getShotChartDetail({
+            playerId: opts.playerId,
+            ...(opts.teamId && { teamId: opts.teamId }),
+            season,
+          })
           const filepath = `${outputDir}/nba/shotchart/player_${opts.playerId}_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('shotChartDetail', filepath)
