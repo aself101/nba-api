@@ -1,6 +1,6 @@
 {
   "name": "nba-api",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "TypeScript wrapper for NBA Stats and Live APIs",
   "type": "module",
   "main": "dist/api.js",

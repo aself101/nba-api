@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/aself101/nba-api/compare/v1.0.2...v1.0.3) (2025-12-12)
+
+
+### Bug Fixes
+
+* **endpoints:** use legacy playbyplay endpoint and refactor getShotChartDetail ([800e349](https://github.com/aself101/nba-api/commit/800e34903642810279d1f1e85f24bcbeb1434a8e))
+
 ## [1.0.2](https://github.com/aself101/nba-api/compare/v1.0.1...v1.0.2) (2025-12-12)
 
 
