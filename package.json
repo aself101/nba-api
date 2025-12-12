@@ -1,0 +1,93 @@
+{
+  "name": "nba-api",
+  "version": "0.1.0",
+  "description": "TypeScript wrapper for NBA Stats and Live APIs",
+  "type": "module",
+  "main": "dist/api.js",
+  "types": "dist/api.d.ts",
+  "bin": {
+    "nba-api": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js"
+    },
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "import": "./dist/api.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    },
+    "./data/players": {
+      "types": "./dist/data/players.d.ts",
+      "import": "./dist/data/players.js"
+    },
+    "./data/teams": {
+      "types": "./dist/data/teams.d.ts",
+      "import": "./dist/data/teams.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas.d.ts",
+      "import": "./dist/schemas.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "nba-api": "node dist/cli.js",
+    "nba-api:help": "node dist/cli.js --help",
+    "nba-api:examples": "node dist/cli.js --examples",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist coverage"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "dotenv": "^16.4.7",
+    "winston": "^3.17.0",
+    "zod": "^4.1.13"
+  },
+  "optionalDependencies": {
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/nba-api"
+  },
+  "keywords": [
+    "nba",
+    "basketball",
+    "stats",
+    "api",
+    "sports",
+    "statistics"
+  ],
+  "author": "",
+  "license": "MIT"
+}
