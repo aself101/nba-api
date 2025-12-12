@@ -4,8 +4,8 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node.js Version](https://img.shields.io/node/v/nba-api)](https://nodejs.org)
-[![Tests](https://img.shields.io/badge/tests-161%20passing-brightgreen)](test/)
-[![Coverage](https://img.shields.io/badge/coverage-75.58%25-yellow)](test/)
+[![Tests](https://img.shields.io/badge/tests-207%20passing-brightgreen)](test/)
+[![Coverage](https://img.shields.io/badge/coverage-92.84%25-brightgreen)](test/)
 
 A TypeScript wrapper for [NBA Stats](https://stats.nba.com/) and [NBA Live](https://cdn.nba.com/) APIs with CLI support. Fetches real-time and historical NBA statistics using authenticated HTTP requests with automatic anti-bot bypass.
 
@@ -71,7 +71,7 @@ The NBA Stats API provides comprehensive basketball statistics from stats.nba.co
 - **Season Validation** - Validates season format and enforces valid ranges
 - **CLI Tool** - Command-line interface with batch processing, season ranges, and dry-run mode
 - **Static Data** - Pre-loaded player and team data for ID lookups without API calls
-- **Comprehensive Testing** - 161 tests with 75.58% coverage
+- **Comprehensive Testing** - 207 tests with 92.84% coverage
 
 ## Data Endpoints
 
@@ -1164,17 +1164,17 @@ npm run nba -- --league-leaders --dry-run
 ### Testing
 
 ```bash
-npm test                  # Run all 161 tests with Vitest
+npm test                  # Run all 207 tests with Vitest
 npm run test:watch        # Watch mode for development
 npm run test:coverage     # Generate coverage report
 ```
 
 **Test Coverage:**
-- Overall: 75.58% lines, 81.89% branches
-- config.ts: 88.43% lines (validation, configuration)
+- Overall: 92.84% lines, 80.43% branches
+- api.ts: 97.38% lines (API methods)
+- config.ts: 89.67% lines (validation, configuration)
 - schemas.ts: 96.25% lines (Zod schema validation)
-- utils.ts: 71.74% lines (HTTP clients, file I/O)
-- api.ts: 55.79% lines (API methods)
+- utils.ts: 86.40% lines (HTTP clients, file I/O)
 
 ### npm Scripts
 

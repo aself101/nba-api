@@ -130,6 +130,16 @@ describe('Validation Functions', () => {
       expect(() => validatePlayerId(-1)).toThrow()
       expect(() => validatePlayerId(1.5)).toThrow()
     })
+
+    it('should accept boundary values', () => {
+      expect(() => validatePlayerId(1)).not.toThrow() // Minimum valid ID
+      expect(() => validatePlayerId(Number.MAX_SAFE_INTEGER)).not.toThrow() // Very large ID
+    })
+
+    it('should reject boundary invalid values', () => {
+      expect(() => validatePlayerId(0.999)).toThrow() // Just under 1
+      expect(() => validatePlayerId(-Number.MAX_SAFE_INTEGER)).toThrow() // Large negative
+    })
   })
 
   describe('validateTeamId', () => {
@@ -141,6 +151,12 @@ describe('Validation Functions', () => {
     it('should reject invalid team IDs', () => {
       expect(() => validateTeamId(0)).toThrow()
       expect(() => validateTeamId(-1)).toThrow()
+    })
+
+    it('should accept boundary values', () => {
+      expect(() => validateTeamId(1)).not.toThrow() // Minimum valid
+      expect(() => validateTeamId(1610612738)).not.toThrow() // Celtics (first team ID)
+      expect(() => validateTeamId(1610612766)).not.toThrow() // Hornets (last team ID)
     })
   })
 
@@ -155,6 +171,18 @@ describe('Validation Functions', () => {
       expect(() => validateGameId('00224000010')).toThrow() // 11 digits
       expect(() => validateGameId('abcdefghij')).toThrow()
     })
+
+    it('should accept boundary game ID values', () => {
+      expect(() => validateGameId('0000000000')).not.toThrow() // All zeros (min 10 digits)
+      expect(() => validateGameId('9999999999')).not.toThrow() // All nines (max 10 digits)
+      expect(() => validateGameId('0012300456')).not.toThrow() // Leading zeros
+    })
+
+    it('should reject boundary invalid game IDs', () => {
+      expect(() => validateGameId('123456789')).toThrow() // 9 digits
+      expect(() => validateGameId('12345678901')).toThrow() // 11 digits
+      expect(() => validateGameId('')).toThrow() // Empty string
+    })
   })
 
   describe('validateDate', () => {
@@ -167,6 +195,22 @@ describe('Validation Functions', () => {
       expect(() => validateDate('01-15-2025')).toThrow()
       expect(() => validateDate('2025/01/15')).toThrow()
       expect(() => validateDate('20250115')).toThrow()
+    })
+
+    it('should accept boundary date values', () => {
+      expect(() => validateDate('2025-01-01')).not.toThrow() // First day of month
+      expect(() => validateDate('2025-01-31')).not.toThrow() // Last day of January
+      expect(() => validateDate('2025-12-01')).not.toThrow() // First day of December
+      expect(() => validateDate('2025-12-31')).not.toThrow() // Last day of year
+      expect(() => validateDate('2024-02-29')).not.toThrow() // Leap day 2024
+    })
+
+    it('should reject boundary invalid date values', () => {
+      expect(() => validateDate('2025-00-15')).toThrow() // Invalid month 00
+      expect(() => validateDate('2025-13-15')).toThrow() // Invalid month 13
+      expect(() => validateDate('2025-01-00')).toThrow() // Invalid day 00
+      expect(() => validateDate('2025-01-32')).toThrow() // Invalid day 32
+      expect(() => validateDate('')).toThrow() // Empty string
     })
   })
 })

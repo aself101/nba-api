@@ -460,6 +460,46 @@ describe('NbaAPI', () => {
       expect(scoreboard).toHaveProperty('leagueId', '00')
       expect(scoreboard.games).toEqual([])
     })
+
+    it('should handle malformed V3 response with null scoreboard', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/scoreboardv3',
+        statusCode: 200,
+        data: {},
+        raw: { scoreboard: null },
+      })
+
+      const scoreboard = await api.getScoreboard('2025-01-15')
+
+      // Should default to empty games array
+      expect(scoreboard.games).toEqual([])
+    })
+
+    it('should handle V3 response with missing games array', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/scoreboardv3',
+        statusCode: 200,
+        data: {},
+        raw: { scoreboard: { gameDate: '2025-01-15' } },
+      })
+
+      const scoreboard = await api.getScoreboard('2025-01-15')
+
+      expect(scoreboard.games).toEqual([])
+    })
+
+    it('should handle alternative ScoreBoard key in V3 response', async () => {
+      mockFetchStats.mockResolvedValueOnce({
+        url: 'https://stats.nba.com/stats/scoreboardv3',
+        statusCode: 200,
+        data: {},
+        raw: { ScoreBoard: { games: [{ gameId: '123' }] } },
+      })
+
+      const scoreboard = await api.getScoreboard('2025-01-15')
+
+      expect(scoreboard.games).toHaveLength(1)
+    })
   })
 
   describe('getLeagueDashPlayerStats', () => {

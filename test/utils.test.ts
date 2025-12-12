@@ -11,11 +11,13 @@ import {
   normalizeResponse,
   pause,
   randomDelay,
+  randomPause,
   createLogger,
   ProgressReporter,
   writeToFile,
   readFromFile,
   fetchStats,
+  fetchLive,
   createFetchClient,
 } from '../src/utils.js'
 
@@ -184,6 +186,22 @@ describe('Rate Limiting', () => {
       const delay = randomDelay()
       expect(delay).toBeGreaterThanOrEqual(1000)
       expect(delay).toBeLessThanOrEqual(3000)
+    })
+  })
+
+  describe('randomPause', () => {
+    it('should pause for a random duration within range', async () => {
+      const pausePromise = randomPause(100, 200)
+      vi.advanceTimersByTime(200)
+      await pausePromise
+      // If we get here without hanging, the test passes
+    })
+
+    it('should use default values when no arguments provided', async () => {
+      const pausePromise = randomPause()
+      vi.advanceTimersByTime(3000) // Max default value
+      await pausePromise
+      // If we get here without hanging, the test passes
     })
   })
 })
@@ -604,6 +622,26 @@ describe('File I/O', () => {
       expect(content).toContain('Test')
     })
 
+    it('should return empty string for array of primitives (non-objects) in CSV', () => {
+      const data = [1, 2, 3, 'string', true]
+      const filepath = path.join(testDir, 'primitives.csv')
+
+      writeToFile(data, filepath)
+
+      const content = fs.readFileSync(filepath, 'utf-8')
+      expect(content).toBe('')
+    })
+
+    it('should return empty string when first item is null in CSV', () => {
+      const data = [null, { name: 'test' }]
+      const filepath = path.join(testDir, 'null-first.csv')
+
+      writeToFile(data, filepath)
+
+      const content = fs.readFileSync(filepath, 'utf-8')
+      expect(content).toBe('')
+    })
+
     it('should create deeply nested directories', () => {
       const data = { test: true }
       const filepath = path.join(testDir, 'a', 'b', 'c', 'd', 'deep.json')
@@ -831,6 +869,87 @@ describe('HTTP Client', () => {
         PLAYER_ID: 2544,
         PLAYER_NAME: 'LeBron James',
       })
+    })
+  })
+
+  describe('fetchLive', () => {
+    let fetchSpy: ReturnType<typeof vi.spyOn>
+
+    beforeEach(() => {
+      fetchSpy = vi.spyOn(globalThis, 'fetch')
+    })
+
+    afterEach(() => {
+      fetchSpy.mockRestore()
+    })
+
+    it('should fetch from Live API and return data', async () => {
+      const mockData = { scoreboard: { games: [] } }
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify(mockData),
+      }
+      fetchSpy.mockResolvedValue(mockResponse as Response)
+
+      const result = await fetchLive('today/scoreboard.json')
+
+      expect(fetchSpy).toHaveBeenCalled()
+      expect(result.data).toEqual(mockData)
+      expect(result.statusCode).toBe(200)
+    })
+
+    it('should replace {game_id} placeholder in endpoint', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify({ game: {} }),
+      }
+      fetchSpy.mockResolvedValue(mockResponse as Response)
+
+      await fetchLive('game/{game_id}/boxscore.json', { gameId: '0022400123' })
+
+      const calledUrl = fetchSpy.mock.calls[0]?.[0] as string
+      expect(calledUrl).toContain('0022400123')
+      expect(calledUrl).not.toContain('{game_id}')
+    })
+
+    it('should throw on HTTP error', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        text: async () => 'Not found',
+      }
+      fetchSpy.mockResolvedValue(mockResponse as Response)
+
+      await expect(fetchLive('nonexistent')).rejects.toThrow('HTTP 404: Not Found')
+    })
+
+    it('should throw on invalid JSON response', async () => {
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        text: async () => 'not valid json',
+      }
+      fetchSpy.mockResolvedValue(mockResponse as Response)
+
+      await expect(fetchLive('test')).rejects.toThrow('Invalid JSON response')
+    })
+
+    it('should include raw response in result', async () => {
+      const mockData = { scoreboard: { gameDate: '2025-01-15' } }
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify(mockData),
+      }
+      fetchSpy.mockResolvedValue(mockResponse as Response)
+
+      const result = await fetchLive('today/scoreboard.json')
+
+      expect(result.raw).toEqual(mockData)
+      expect(result.data).toEqual(mockData)
     })
   })
 })
