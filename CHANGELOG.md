@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/aself101/nba-api/compare/v1.2.0...v1.2.1) (2025-12-12)
+
+
+### Bug Fixes
+
+* **cli:** add subfolders to dataset output paths ([5f4893c](https://github.com/aself101/nba-api/commit/5f4893c94901caaf579cbc6ab457ca7b6da8041e))
+
 # [1.2.0](https://github.com/aself101/nba-api/compare/v1.1.0...v1.2.0) (2025-12-12)
 
 
