@@ -539,20 +539,44 @@ export class NbaAPI {
      */
     async getBoxScoreTraditional(gameId) {
         validateGameId(gameId);
-        const data = await this._fetchStats(ENDPOINTS.BOX_SCORE_TRADITIONAL, {
+        // boxscoretraditionalv3 uses non-standard response format, need raw response
+        const rawData = (await this._fetchStats(ENDPOINTS.BOX_SCORE_TRADITIONAL, {
             GameID: gameId,
             LeagueID: LeagueID.NBA,
-        });
-        const playerStatsRaw = (data['PlayerStats'] ?? []).map((row) => normalizeKeys(row));
-        const teamStatsRaw = (data['TeamStats'] ?? []).map((row) => normalizeKeys(row));
-        // SAFETY: parseArraySafe validates structure, falls back to raw data if validation fails
-        const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, playerStatsRaw);
-        const teamStats = parseArraySafe(BoxScoreTeamStatsSchema, teamStatsRaw);
+        }, { returnRaw: true }));
+        // V3 box score structure: { boxScoreTraditional: { homeTeam: { players }, awayTeam: { players } } }
+        const boxScore = (rawData['boxScoreTraditional'] ?? {});
+        const homeTeam = (boxScore['homeTeam'] ?? {});
+        const awayTeam = (boxScore['awayTeam'] ?? {});
+        // Extract and flatten player stats from both teams
+        const homePlayers = (homeTeam['players'] ?? []).map((p) => ({
+            ...normalizeKeys(p),
+            ...normalizeKeys((p['statistics'] ?? {})),
+            teamId: homeTeam['teamId'],
+            teamAbbreviation: homeTeam['teamTricode'],
+        }));
+        const awayPlayers = (awayTeam['players'] ?? []).map((p) => ({
+            ...normalizeKeys(p),
+            ...normalizeKeys((p['statistics'] ?? {})),
+            teamId: awayTeam['teamId'],
+            teamAbbreviation: awayTeam['teamTricode'],
+        }));
+        const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, [...homePlayers, ...awayPlayers]);
+        // Extract team stats
+        const homeTeamStats = {
+            ...normalizeKeys(homeTeam),
+            ...normalizeKeys((homeTeam['statistics'] ?? {})),
+        };
+        const awayTeamStats = {
+            ...normalizeKeys(awayTeam),
+            ...normalizeKeys((awayTeam['statistics'] ?? {})),
+        };
+        const teamStats = parseArraySafe(BoxScoreTeamStatsSchema, [homeTeamStats, awayTeamStats]);
         return {
-            gameId,
-            homeTeamId: 0,
-            awayTeamId: 0,
-            gameDateEst: '',
+            gameId: boxScore['gameId'] ?? gameId,
+            homeTeamId: boxScore['homeTeamId'] ?? 0,
+            awayTeamId: boxScore['awayTeamId'] ?? 0,
+            gameDateEst: boxScore['gameTimeLocal'] ?? '',
             playerStats,
             teamStats,
         };
@@ -563,21 +587,45 @@ export class NbaAPI {
      */
     async getBoxScoreAdvanced(gameId) {
         validateGameId(gameId);
-        const data = await this._fetchStats(ENDPOINTS.BOX_SCORE_ADVANCED, {
+        // boxscoreadvancedv3 uses non-standard response format, need raw response
+        const rawData = (await this._fetchStats(ENDPOINTS.BOX_SCORE_ADVANCED, {
             GameID: gameId,
             LeagueID: LeagueID.NBA,
-        });
-        const playerStatsRaw = (data['PlayerStats'] ?? []).map((row) => normalizeKeys(row));
-        const teamStatsRaw = (data['TeamStats'] ?? []).map((row) => normalizeKeys(row));
-        // SAFETY: parseArraySafe validates structure, falls back to raw data if validation fails
-        const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, playerStatsRaw);
+        }, { returnRaw: true }));
+        // V3 box score structure: { boxScoreAdvanced: { homeTeam: { players }, awayTeam: { players } } }
+        const boxScore = (rawData['boxScoreAdvanced'] ?? {});
+        const homeTeam = (boxScore['homeTeam'] ?? {});
+        const awayTeam = (boxScore['awayTeam'] ?? {});
+        // Extract and flatten player stats from both teams
+        const homePlayers = (homeTeam['players'] ?? []).map((p) => ({
+            ...normalizeKeys(p),
+            ...normalizeKeys((p['statistics'] ?? {})),
+            teamId: homeTeam['teamId'],
+            teamAbbreviation: homeTeam['teamTricode'],
+        }));
+        const awayPlayers = (awayTeam['players'] ?? []).map((p) => ({
+            ...normalizeKeys(p),
+            ...normalizeKeys((p['statistics'] ?? {})),
+            teamId: awayTeam['teamId'],
+            teamAbbreviation: awayTeam['teamTricode'],
+        }));
+        const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, [...homePlayers, ...awayPlayers]);
+        // Extract team stats
+        const homeTeamStats = {
+            ...normalizeKeys(homeTeam),
+            ...normalizeKeys((homeTeam['statistics'] ?? {})),
+        };
+        const awayTeamStats = {
+            ...normalizeKeys(awayTeam),
+            ...normalizeKeys((awayTeam['statistics'] ?? {})),
+        };
         return {
-            gameId,
-            homeTeamId: 0,
-            awayTeamId: 0,
-            gameDateEst: '',
+            gameId: boxScore['gameId'] ?? gameId,
+            homeTeamId: boxScore['homeTeamId'] ?? 0,
+            awayTeamId: boxScore['awayTeamId'] ?? 0,
+            gameDateEst: boxScore['gameTimeLocal'] ?? '',
             playerStats,
-            teamStats: teamStatsRaw,
+            teamStats: [homeTeamStats, awayTeamStats],
         };
     }
     /**

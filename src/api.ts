@@ -785,27 +785,53 @@ export class NbaAPI {
   async getBoxScoreTraditional(gameId: string): Promise<BoxScoreTraditional> {
     validateGameId(gameId)
 
-    const data = await this._fetchStats(ENDPOINTS.BOX_SCORE_TRADITIONAL, {
-      GameID: gameId,
-      LeagueID: LeagueID.NBA,
-    })
+    // boxscoretraditionalv3 uses non-standard response format, need raw response
+    const rawData = (await this._fetchStats(
+      ENDPOINTS.BOX_SCORE_TRADITIONAL,
+      {
+        GameID: gameId,
+        LeagueID: LeagueID.NBA,
+      },
+      { returnRaw: true }
+    )) as Record<string, unknown>
 
-    const playerStatsRaw = (data['PlayerStats'] ?? []).map((row) =>
-      normalizeKeys(row as Record<string, unknown>)
-    )
-    const teamStatsRaw = (data['TeamStats'] ?? []).map((row) =>
-      normalizeKeys(row as Record<string, unknown>)
-    )
+    // V3 box score structure: { boxScoreTraditional: { homeTeam: { players }, awayTeam: { players } } }
+    const boxScore = (rawData['boxScoreTraditional'] ?? {}) as Record<string, unknown>
+    const homeTeam = (boxScore['homeTeam'] ?? {}) as Record<string, unknown>
+    const awayTeam = (boxScore['awayTeam'] ?? {}) as Record<string, unknown>
 
-    // SAFETY: parseArraySafe validates structure, falls back to raw data if validation fails
-    const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, playerStatsRaw)
-    const teamStats = parseArraySafe(BoxScoreTeamStatsSchema, teamStatsRaw)
+    // Extract and flatten player stats from both teams
+    const homePlayers = ((homeTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
+      ...normalizeKeys(p),
+      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
+      teamId: homeTeam['teamId'],
+      teamAbbreviation: homeTeam['teamTricode'],
+    }))
+    const awayPlayers = ((awayTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
+      ...normalizeKeys(p),
+      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
+      teamId: awayTeam['teamId'],
+      teamAbbreviation: awayTeam['teamTricode'],
+    }))
+
+    const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, [...homePlayers, ...awayPlayers])
+
+    // Extract team stats
+    const homeTeamStats = {
+      ...normalizeKeys(homeTeam),
+      ...normalizeKeys((homeTeam['statistics'] ?? {}) as Record<string, unknown>),
+    }
+    const awayTeamStats = {
+      ...normalizeKeys(awayTeam),
+      ...normalizeKeys((awayTeam['statistics'] ?? {}) as Record<string, unknown>),
+    }
+    const teamStats = parseArraySafe(BoxScoreTeamStatsSchema, [homeTeamStats, awayTeamStats])
 
     return {
-      gameId,
-      homeTeamId: 0,
-      awayTeamId: 0,
-      gameDateEst: '',
+      gameId: (boxScore['gameId'] as string) ?? gameId,
+      homeTeamId: (boxScore['homeTeamId'] as number) ?? 0,
+      awayTeamId: (boxScore['awayTeamId'] as number) ?? 0,
+      gameDateEst: (boxScore['gameTimeLocal'] as string) ?? '',
       playerStats,
       teamStats,
     } as unknown as BoxScoreTraditional
@@ -818,28 +844,54 @@ export class NbaAPI {
   async getBoxScoreAdvanced(gameId: string): Promise<BoxScoreAdvanced> {
     validateGameId(gameId)
 
-    const data = await this._fetchStats(ENDPOINTS.BOX_SCORE_ADVANCED, {
-      GameID: gameId,
-      LeagueID: LeagueID.NBA,
-    })
+    // boxscoreadvancedv3 uses non-standard response format, need raw response
+    const rawData = (await this._fetchStats(
+      ENDPOINTS.BOX_SCORE_ADVANCED,
+      {
+        GameID: gameId,
+        LeagueID: LeagueID.NBA,
+      },
+      { returnRaw: true }
+    )) as Record<string, unknown>
 
-    const playerStatsRaw = (data['PlayerStats'] ?? []).map((row) =>
-      normalizeKeys(row as Record<string, unknown>)
-    )
-    const teamStatsRaw = (data['TeamStats'] ?? []).map((row) =>
-      normalizeKeys(row as Record<string, unknown>)
-    )
+    // V3 box score structure: { boxScoreAdvanced: { homeTeam: { players }, awayTeam: { players } } }
+    const boxScore = (rawData['boxScoreAdvanced'] ?? {}) as Record<string, unknown>
+    const homeTeam = (boxScore['homeTeam'] ?? {}) as Record<string, unknown>
+    const awayTeam = (boxScore['awayTeam'] ?? {}) as Record<string, unknown>
 
-    // SAFETY: parseArraySafe validates structure, falls back to raw data if validation fails
-    const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, playerStatsRaw)
+    // Extract and flatten player stats from both teams
+    const homePlayers = ((homeTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
+      ...normalizeKeys(p),
+      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
+      teamId: homeTeam['teamId'],
+      teamAbbreviation: homeTeam['teamTricode'],
+    }))
+    const awayPlayers = ((awayTeam['players'] ?? []) as Record<string, unknown>[]).map((p) => ({
+      ...normalizeKeys(p),
+      ...normalizeKeys((p['statistics'] ?? {}) as Record<string, unknown>),
+      teamId: awayTeam['teamId'],
+      teamAbbreviation: awayTeam['teamTricode'],
+    }))
+
+    const playerStats = parseArraySafe(BoxScorePlayerStatsSchema, [...homePlayers, ...awayPlayers])
+
+    // Extract team stats
+    const homeTeamStats = {
+      ...normalizeKeys(homeTeam),
+      ...normalizeKeys((homeTeam['statistics'] ?? {}) as Record<string, unknown>),
+    }
+    const awayTeamStats = {
+      ...normalizeKeys(awayTeam),
+      ...normalizeKeys((awayTeam['statistics'] ?? {}) as Record<string, unknown>),
+    }
 
     return {
-      gameId,
-      homeTeamId: 0,
-      awayTeamId: 0,
-      gameDateEst: '',
+      gameId: (boxScore['gameId'] as string) ?? gameId,
+      homeTeamId: (boxScore['homeTeamId'] as number) ?? 0,
+      awayTeamId: (boxScore['awayTeamId'] as number) ?? 0,
+      gameDateEst: (boxScore['gameTimeLocal'] as string) ?? '',
       playerStats,
-      teamStats: teamStatsRaw,
+      teamStats: [homeTeamStats, awayTeamStats],
     } as unknown as BoxScoreAdvanced
   }
 
