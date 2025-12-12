@@ -242,6 +242,8 @@ function normalizeResultSet(resultSet) {
 }
 /**
  * Convert column name from NBA's UPPER_SNAKE_CASE to camelCase.
+ * @param str - String to convert (e.g., "PLAYER_ID")
+ * @returns camelCase string (e.g., "playerId")
  */
 export function toCamelCase(str) {
     return str.toLowerCase().replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -395,13 +397,11 @@ export function createLogger(level = 'INFO') {
 // V3 Box Score Normalization
 // =============================================================================
 /**
- * Normalize V3 box score player data to match expected schema format.
- * V3 uses different field names: personId -> playerId, firstName+familyName -> playerName, etc.
+ * Extract player identity fields from V3 API response.
+ * Maps V3 field names (personId, firstName, familyName) to expected schema names.
  */
-export function normalizeV3PlayerStats(player, team) {
-    const stats = (player['statistics'] ?? {});
+function extractV3PlayerIdentity(player) {
     return {
-        // Player identification
         playerId: player['personId'],
         playerName: `${player['firstName'] ?? ''} ${player['familyName'] ?? ''}`.trim(),
         playerNameI: player['nameI'],
@@ -409,12 +409,32 @@ export function normalizeV3PlayerStats(player, team) {
         position: player['position'],
         startPosition: player['position'],
         comment: player['comment'],
-        // Team info
+    };
+}
+/**
+ * Extract team info fields from V3 API response.
+ * Maps V3 field names (teamTricode) to expected schema names (teamAbbreviation).
+ * @param team - Team object from V3 response
+ * @param includeSlug - Whether to include teamSlug (team stats only, not player stats)
+ */
+function extractV3TeamInfo(team, includeSlug = false) {
+    const info = {
         teamId: team['teamId'],
         teamCity: team['teamCity'],
         teamName: team['teamName'],
         teamAbbreviation: team['teamTricode'],
-        // Statistics (remap V3 names to expected names)
+    };
+    if (includeSlug) {
+        info.teamSlug = team['teamSlug'];
+    }
+    return info;
+}
+/**
+ * Extract traditional box score statistics from V3 API response.
+ * Maps V3 stat names (fieldGoalsPercentage, reboundsTotal) to expected schema names.
+ */
+function extractV3TraditionalStats(stats) {
+    return {
         minutes: stats['minutes'],
         fieldGoalsMade: stats['fieldGoalsMade'],
         fieldGoalsAttempted: stats['fieldGoalsAttempted'],
@@ -438,38 +458,62 @@ export function normalizeV3PlayerStats(player, team) {
     };
 }
 /**
+ * Extract advanced box score statistics from V3 API response.
+ * Maps V3 stat names to expected schema names for advanced metrics.
+ * @param stats - Statistics object from V3 response
+ * @param isTeam - Whether this is team stats (includes estimatedTeamTurnoverPercentage)
+ */
+function extractV3AdvancedStats(stats, isTeam = false) {
+    const advanced = {
+        minutes: stats['minutes'],
+        estimatedOffensiveRating: stats['estimatedOffensiveRating'],
+        offensiveRating: stats['offensiveRating'],
+        estimatedDefensiveRating: stats['estimatedDefensiveRating'],
+        defensiveRating: stats['defensiveRating'],
+        estimatedNetRating: stats['estimatedNetRating'],
+        netRating: stats['netRating'],
+        assistPercentage: stats['assistPercentage'],
+        assistToTurnover: stats['assistToTurnover'],
+        assistRatio: stats['assistRatio'],
+        offensiveReboundPercentage: stats['offensiveReboundPercentage'],
+        defensiveReboundPercentage: stats['defensiveReboundPercentage'],
+        reboundPercentage: stats['reboundPercentage'],
+        turnoverRatio: stats['turnoverRatio'],
+        effectiveFieldGoalPercentage: stats['effectiveFieldGoalPercentage'],
+        trueShootingPercentage: stats['trueShootingPercentage'],
+        usagePercentage: stats['usagePercentage'],
+        estimatedUsagePercentage: stats['estimatedUsagePercentage'],
+        estimatedPace: stats['estimatedPace'],
+        pace: stats['pace'],
+        pacePer40: stats['pacePer40'],
+        possessions: stats['possessions'],
+        pie: stats['PIE'],
+    };
+    if (isTeam) {
+        advanced.estimatedTeamTurnoverPercentage = stats['estimatedTeamTurnoverPercentage'];
+    }
+    return advanced;
+}
+/**
+ * Normalize V3 box score player data to match expected schema format.
+ * V3 uses different field names: personId -> playerId, firstName+familyName -> playerName, etc.
+ */
+export function normalizeV3PlayerStats(player, team) {
+    const stats = (player['statistics'] ?? {});
+    return {
+        ...extractV3PlayerIdentity(player),
+        ...extractV3TeamInfo(team),
+        ...extractV3TraditionalStats(stats),
+    };
+}
+/**
  * Normalize V3 box score team data to match expected schema format.
  */
 export function normalizeV3TeamStats(team) {
     const stats = (team['statistics'] ?? {});
     return {
-        // Team identification
-        teamId: team['teamId'],
-        teamCity: team['teamCity'],
-        teamName: team['teamName'],
-        teamAbbreviation: team['teamTricode'],
-        teamSlug: team['teamSlug'],
-        // Statistics (remap V3 names to expected names)
-        minutes: stats['minutes'],
-        fieldGoalsMade: stats['fieldGoalsMade'],
-        fieldGoalsAttempted: stats['fieldGoalsAttempted'],
-        fieldGoalPct: stats['fieldGoalsPercentage'],
-        threePointersMade: stats['threePointersMade'],
-        threePointersAttempted: stats['threePointersAttempted'],
-        threePointPct: stats['threePointersPercentage'],
-        freeThrowsMade: stats['freeThrowsMade'],
-        freeThrowsAttempted: stats['freeThrowsAttempted'],
-        freeThrowPct: stats['freeThrowsPercentage'],
-        offensiveRebounds: stats['reboundsOffensive'],
-        defensiveRebounds: stats['reboundsDefensive'],
-        rebounds: stats['reboundsTotal'],
-        assists: stats['assists'],
-        steals: stats['steals'],
-        blocks: stats['blocks'],
-        turnovers: stats['turnovers'],
-        personalFouls: stats['foulsPersonal'],
-        points: stats['points'],
-        plusMinus: stats['plusMinusPoints'],
+        ...extractV3TeamInfo(team, true),
+        ...extractV3TraditionalStats(stats),
     };
 }
 /**
@@ -479,43 +523,9 @@ export function normalizeV3TeamStats(team) {
 export function normalizeV3AdvancedPlayerStats(player, team) {
     const stats = (player['statistics'] ?? {});
     return {
-        // Player identification
-        playerId: player['personId'],
-        playerName: `${player['firstName'] ?? ''} ${player['familyName'] ?? ''}`.trim(),
-        playerNameI: player['nameI'],
-        jerseyNum: player['jerseyNum'],
-        position: player['position'],
-        startPosition: player['position'],
-        comment: player['comment'],
-        // Team info
-        teamId: team['teamId'],
-        teamCity: team['teamCity'],
-        teamName: team['teamName'],
-        teamAbbreviation: team['teamTricode'],
-        // Advanced statistics
-        minutes: stats['minutes'],
-        estimatedOffensiveRating: stats['estimatedOffensiveRating'],
-        offensiveRating: stats['offensiveRating'],
-        estimatedDefensiveRating: stats['estimatedDefensiveRating'],
-        defensiveRating: stats['defensiveRating'],
-        estimatedNetRating: stats['estimatedNetRating'],
-        netRating: stats['netRating'],
-        assistPercentage: stats['assistPercentage'],
-        assistToTurnover: stats['assistToTurnover'],
-        assistRatio: stats['assistRatio'],
-        offensiveReboundPercentage: stats['offensiveReboundPercentage'],
-        defensiveReboundPercentage: stats['defensiveReboundPercentage'],
-        reboundPercentage: stats['reboundPercentage'],
-        turnoverRatio: stats['turnoverRatio'],
-        effectiveFieldGoalPercentage: stats['effectiveFieldGoalPercentage'],
-        trueShootingPercentage: stats['trueShootingPercentage'],
-        usagePercentage: stats['usagePercentage'],
-        estimatedUsagePercentage: stats['estimatedUsagePercentage'],
-        estimatedPace: stats['estimatedPace'],
-        pace: stats['pace'],
-        pacePer40: stats['pacePer40'],
-        possessions: stats['possessions'],
-        pie: stats['PIE'],
+        ...extractV3PlayerIdentity(player),
+        ...extractV3TeamInfo(team),
+        ...extractV3AdvancedStats(stats),
     };
 }
 /**
@@ -524,42 +534,20 @@ export function normalizeV3AdvancedPlayerStats(player, team) {
 export function normalizeV3AdvancedTeamStats(team) {
     const stats = (team['statistics'] ?? {});
     return {
-        // Team identification
-        teamId: team['teamId'],
-        teamCity: team['teamCity'],
-        teamName: team['teamName'],
-        teamAbbreviation: team['teamTricode'],
-        teamSlug: team['teamSlug'],
-        // Advanced statistics
-        minutes: stats['minutes'],
-        estimatedOffensiveRating: stats['estimatedOffensiveRating'],
-        offensiveRating: stats['offensiveRating'],
-        estimatedDefensiveRating: stats['estimatedDefensiveRating'],
-        defensiveRating: stats['defensiveRating'],
-        estimatedNetRating: stats['estimatedNetRating'],
-        netRating: stats['netRating'],
-        assistPercentage: stats['assistPercentage'],
-        assistToTurnover: stats['assistToTurnover'],
-        assistRatio: stats['assistRatio'],
-        offensiveReboundPercentage: stats['offensiveReboundPercentage'],
-        defensiveReboundPercentage: stats['defensiveReboundPercentage'],
-        reboundPercentage: stats['reboundPercentage'],
-        estimatedTeamTurnoverPercentage: stats['estimatedTeamTurnoverPercentage'],
-        turnoverRatio: stats['turnoverRatio'],
-        effectiveFieldGoalPercentage: stats['effectiveFieldGoalPercentage'],
-        trueShootingPercentage: stats['trueShootingPercentage'],
-        usagePercentage: stats['usagePercentage'],
-        estimatedUsagePercentage: stats['estimatedUsagePercentage'],
-        estimatedPace: stats['estimatedPace'],
-        pace: stats['pace'],
-        pacePer40: stats['pacePer40'],
-        possessions: stats['possessions'],
-        pie: stats['PIE'],
+        ...extractV3TeamInfo(team, true),
+        ...extractV3AdvancedStats(stats, true),
     };
 }
 /**
  * CLI progress reporter for displaying fetch operations status.
  * Supports both human-readable and JSON output formats.
+ *
+ * **Why console.log instead of winston:**
+ * This class intentionally uses `console.log` instead of the winston logger because:
+ * 1. CLI tools need direct stdout control for proper piping and formatting
+ * 2. Users expect formatted progress output, not timestamped log levels
+ * 3. Winston is reserved for library-internal debug/error logging only
+ * 4. JSON mode requires raw stdout for machine parsing (no log prefixes)
  *
  * @example
  * ```typescript

@@ -598,7 +598,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('playerGameLog', { playerId: opts.playerId, season })
           const data = await api.getPlayerGameLog(opts.playerId, season, seasonType)
-          const filepath = `${outputDir}/nba/player/${opts.playerId}/gamelog_${season}.json`
+          const filepath = `${outputDir}/nba/player/${opts.playerId}/gamelog/gamelog_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('playerGameLog', filepath)
           await randomPause()
@@ -611,7 +611,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('commonAllPlayers', { season })
           const data = await api.getCommonAllPlayers(season)
-          const filepath = `${outputDir}/nba/players/all_players_${season}.json`
+          const filepath = `${outputDir}/nba/players/allplayers/all_players_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('commonAllPlayers', filepath)
           await randomPause()
@@ -624,7 +624,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('playerEstimatedMetrics', { season })
           const data = await api.getPlayerEstimatedMetrics(season)
-          const filepath = `${outputDir}/nba/players/metrics_${season}.json`
+          const filepath = `${outputDir}/nba/players/metrics/metrics_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('playerEstimatedMetrics', filepath)
           await randomPause()
@@ -638,7 +638,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('commonTeamRoster', { teamId: opts.teamId, season })
           const data = await api.getCommonTeamRoster(opts.teamId, season)
-          const filepath = `${outputDir}/nba/team/${opts.teamId}/roster_${season}.json`
+          const filepath = `${outputDir}/nba/team/${opts.teamId}/roster/roster_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('commonTeamRoster', filepath)
           await randomPause()
@@ -651,7 +651,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('teamGameLog', { teamId: opts.teamId, season })
           const data = await api.getTeamGameLog(opts.teamId, season, seasonType)
-          const filepath = `${outputDir}/nba/team/${opts.teamId}/gamelog_${season}.json`
+          const filepath = `${outputDir}/nba/team/${opts.teamId}/gamelog/gamelog_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('teamGameLog', filepath)
           await randomPause()
@@ -664,7 +664,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('teamInfoCommon', { teamId: opts.teamId, season })
           const data = await api.getTeamInfoCommon(opts.teamId, season)
-          const filepath = `${outputDir}/nba/team/${opts.teamId}/info_${season}.json`
+          const filepath = `${outputDir}/nba/team/${opts.teamId}/info/info_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('teamInfoCommon', filepath)
           await randomPause()
@@ -679,7 +679,7 @@ async function main(): Promise<void> {
           const statCat = opts.statCategory ?? 'PTS'
           reporter.logFetch('leagueLeaders', { season, statCategory: statCat })
           const data = await api.getLeagueLeaders(season, statCat)
-          const filepath = `${outputDir}/nba/league/leaders_${statCat}_${season}.json`
+          const filepath = `${outputDir}/nba/league/leaders/leaders_${statCat}_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('leagueLeaders', filepath)
           await randomPause()
@@ -692,7 +692,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('leagueDashPlayerStats', { season })
           const data = await api.getLeagueDashPlayerStats({ season, seasonType })
-          const filepath = `${outputDir}/nba/league/dash_players_${season}.json`
+          const filepath = `${outputDir}/nba/league/dashplayers/dash_players_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('leagueDashPlayerStats', filepath)
           await randomPause()
@@ -705,7 +705,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('leagueStandings', { season })
           const data = await api.getLeagueStandings(season, seasonType)
-          const filepath = `${outputDir}/nba/league/standings_${season}.json`
+          const filepath = `${outputDir}/nba/league/standings/standings_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('leagueStandings', filepath)
           await randomPause()
@@ -718,7 +718,7 @@ async function main(): Promise<void> {
         try {
           reporter.logFetch('leagueGameLog', { season })
           const data = await api.getLeagueGameLog(season, seasonType)
-          const filepath = `${outputDir}/nba/league/gamelog_${season}.json`
+          const filepath = `${outputDir}/nba/league/gamelog/gamelog_${season}.json`
           writeToFile(data, filepath)
           reporter.logSuccess('leagueGameLog', filepath)
           await randomPause()

@@ -499,6 +499,10 @@ export class NbaAPI {
         const homeTeamStats = normalizeV3TeamStats(homeTeam);
         const awayTeamStats = normalizeV3TeamStats(awayTeam);
         const teamStats = parseArraySafe(BoxScoreTeamStatsSchema, [homeTeamStats, awayTeamStats]);
+        // SAFETY: Manual construction from V3 API response. The object shape matches BoxScoreTraditional
+        // interface: gameId, homeTeamId, awayTeamId, gameDateEst, gameCode are extracted from raw response,
+        // playerStats are validated via BoxScorePlayerStatsSchema.parse(), teamStats via BoxScoreTeamStatsSchema.parse().
+        // The double assertion is required because TypeScript cannot infer the nested structure matches the interface.
         return {
             gameId: boxScore['gameId'] ?? gameId,
             homeTeamId: boxScore['homeTeamId'] ?? 0,
@@ -534,6 +538,11 @@ export class NbaAPI {
         // Extract and normalize team stats using V3 advanced normalization
         const homeTeamStats = normalizeV3AdvancedTeamStats(homeTeam);
         const awayTeamStats = normalizeV3AdvancedTeamStats(awayTeam);
+        // SAFETY: Manual construction from V3 API response. The object shape matches BoxScoreAdvanced
+        // interface: gameId, homeTeamId, awayTeamId, gameDateEst, gameCode are extracted from raw response,
+        // playerStats and teamStats are normalized via normalizeV3Advanced* helpers which map V3 field names
+        // to expected schema field names. The double assertion is required because TypeScript cannot infer
+        // that the manually constructed object matches the interface structure.
         return {
             gameId: boxScore['gameId'] ?? gameId,
             homeTeamId: boxScore['homeTeamId'] ?? 0,
@@ -558,6 +567,10 @@ export class NbaAPI {
             EndPeriod: 14, // Covers all possible periods including OT
         });
         const resultSet = data['PlayByPlay'] ?? [];
+        // SAFETY: normalizeKeys transforms UPPER_SNAKE_CASE keys to camelCase. The NBA API's PlayByPlay
+        // resultSet contains the expected fields (eventNum, period, clock, description, etc.) which map
+        // directly to PlayByPlayAction interface after key normalization. No schema validation is performed
+        // as the play-by-play structure varies by game state; consumers should handle missing optional fields.
         return resultSet.map((row) => normalizeKeys(row));
     }
     // ===========================================================================
@@ -598,6 +611,10 @@ export class NbaAPI {
             VsDivision: vsDivision,
         });
         const resultSet = data['Shot_Chart_Detail'] ?? [];
+        // SAFETY: normalizeKeys transforms UPPER_SNAKE_CASE keys to camelCase. The NBA API's Shot_Chart_Detail
+        // resultSet contains shot location data (locX, locY, shotType, shotZone, shotMadeFlag, etc.) which map
+        // directly to ShotChartShot interface after key normalization. No schema validation is performed
+        // as shot chart structure is consistent but contains many optional fields depending on the query context.
         return resultSet.map((row) => normalizeKeys(row));
     }
     /**

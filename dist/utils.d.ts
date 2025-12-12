@@ -46,6 +46,8 @@ export declare function fetchLive(endpoint: string, options?: {
 export declare function normalizeResponse(raw: RawStatsResponse): NormalizedResponse;
 /**
  * Convert column name from NBA's UPPER_SNAKE_CASE to camelCase.
+ * @param str - String to convert (e.g., "PLAYER_ID")
+ * @returns camelCase string (e.g., "playerId")
  */
 export declare function toCamelCase(str: string): string;
 /**
@@ -146,6 +148,13 @@ export interface ProgressReporterOptions {
 /**
  * CLI progress reporter for displaying fetch operations status.
  * Supports both human-readable and JSON output formats.
+ *
+ * **Why console.log instead of winston:**
+ * This class intentionally uses `console.log` instead of the winston logger because:
+ * 1. CLI tools need direct stdout control for proper piping and formatting
+ * 2. Users expect formatted progress output, not timestamped log levels
+ * 3. Winston is reserved for library-internal debug/error logging only
+ * 4. JSON mode requires raw stdout for machine parsing (no log prefixes)
  *
  * @example
  * ```typescript

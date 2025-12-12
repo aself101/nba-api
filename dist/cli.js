@@ -20,6 +20,62 @@ const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
 const DEFAULT_DATA_DIR = 'datasets';
 /**
+ * Mapping of CLI endpoint flags to their display names for dry-run mode.
+ * Maintains the order endpoints are displayed in --dry-run output.
+ */
+const ENDPOINT_DISPLAY_NAMES = {
+    playerCareer: 'Player Career Stats',
+    playerGameLog: 'Player Game Log',
+    playerInfo: 'Player Info',
+    allPlayers: 'All Players',
+    playerMetrics: 'Player Estimated Metrics',
+    teamRoster: 'Team Roster',
+    teamGameLog: 'Team Game Log',
+    teamInfo: 'Team Info',
+    teamHistory: 'Team Year-by-Year Stats',
+    leagueLeaders: 'League Leaders',
+    leagueDashPlayers: 'League Dashboard Player Stats',
+    standings: 'League Standings',
+    gameFinder: 'Game Finder',
+    leagueGameLog: 'League Game Log',
+    scoreboard: 'Scoreboard',
+    boxScore: 'Box Score Traditional',
+    boxScoreAdvanced: 'Box Score Advanced',
+    playByPlay: 'Play By Play',
+    shotChart: 'Shot Chart',
+    draftHistory: 'Draft History',
+    liveScoreboard: 'Live Scoreboard',
+    liveBoxScore: 'Live Box Score',
+    livePlayByPlay: 'Live Play By Play',
+    liveOdds: 'Live Odds',
+};
+/**
+ * Print dry-run summary showing what would be fetched without making API calls.
+ * @param opts - CLI options containing endpoint flags and parameters
+ * @param seasonRange - Array of seasons that would be processed
+ */
+function printDryRunSummary(opts, seasonRange) {
+    console.log('\n=== DRY RUN ===\n');
+    console.log('Would fetch the following:');
+    console.log(`  Seasons: ${seasonRange.join(', ')}`);
+    // Print optional parameters if specified
+    if (opts.playerId)
+        console.log(`  Player ID: ${opts.playerId}`);
+    if (opts.teamId)
+        console.log(`  Team ID: ${opts.teamId}`);
+    if (opts.gameId)
+        console.log(`  Game ID: ${opts.gameId}`);
+    if (opts.gameDate)
+        console.log(`  Game Date: ${opts.gameDate}`);
+    // Print enabled endpoints
+    console.log('\nEndpoints:');
+    for (const [flag, displayName] of Object.entries(ENDPOINT_DISPLAY_NAMES)) {
+        if (opts[flag]) {
+            console.log(`  - ${displayName}`);
+        }
+    }
+}
+/**
  * Helper to fetch data and save to file with consistent logging.
  * Reduces repetitive try/catch blocks throughout the CLI.
  */
@@ -294,66 +350,7 @@ async function main() {
     }
     // Dry run mode
     if (opts.dryRun) {
-        console.log('\n=== DRY RUN ===\n');
-        console.log('Would fetch the following:');
-        console.log(`  Seasons: ${seasonRange.join(', ')}`);
-        if (opts.playerId)
-            console.log(`  Player ID: ${opts.playerId}`);
-        if (opts.teamId)
-            console.log(`  Team ID: ${opts.teamId}`);
-        if (opts.gameId)
-            console.log(`  Game ID: ${opts.gameId}`);
-        if (opts.gameDate)
-            console.log(`  Game Date: ${opts.gameDate}`);
-        console.log('\nEndpoints:');
-        if (opts.playerCareer)
-            console.log('  - Player Career Stats');
-        if (opts.playerGameLog)
-            console.log('  - Player Game Log');
-        if (opts.playerInfo)
-            console.log('  - Player Info');
-        if (opts.allPlayers)
-            console.log('  - All Players');
-        if (opts.playerMetrics)
-            console.log('  - Player Estimated Metrics');
-        if (opts.teamRoster)
-            console.log('  - Team Roster');
-        if (opts.teamGameLog)
-            console.log('  - Team Game Log');
-        if (opts.teamInfo)
-            console.log('  - Team Info');
-        if (opts.teamHistory)
-            console.log('  - Team Year-by-Year Stats');
-        if (opts.leagueLeaders)
-            console.log('  - League Leaders');
-        if (opts.leagueDashPlayers)
-            console.log('  - League Dashboard Player Stats');
-        if (opts.standings)
-            console.log('  - League Standings');
-        if (opts.gameFinder)
-            console.log('  - Game Finder');
-        if (opts.leagueGameLog)
-            console.log('  - League Game Log');
-        if (opts.scoreboard)
-            console.log('  - Scoreboard');
-        if (opts.boxScore)
-            console.log('  - Box Score Traditional');
-        if (opts.boxScoreAdvanced)
-            console.log('  - Box Score Advanced');
-        if (opts.playByPlay)
-            console.log('  - Play By Play');
-        if (opts.shotChart)
-            console.log('  - Shot Chart');
-        if (opts.draftHistory)
-            console.log('  - Draft History');
-        if (opts.liveScoreboard)
-            console.log('  - Live Scoreboard');
-        if (opts.liveBoxScore)
-            console.log('  - Live Box Score');
-        if (opts.livePlayByPlay)
-            console.log('  - Live Play By Play');
-        if (opts.liveOdds)
-            console.log('  - Live Odds');
+        printDryRunSummary(opts, seasonRange);
         process.exit(0);
     }
     // Initialize API
@@ -484,7 +481,7 @@ async function main() {
                 try {
                     reporter.logFetch('playerGameLog', { playerId: opts.playerId, season });
                     const data = await api.getPlayerGameLog(opts.playerId, season, seasonType);
-                    const filepath = `${outputDir}/nba/player/${opts.playerId}/gamelog_${season}.json`;
+                    const filepath = `${outputDir}/nba/player/${opts.playerId}/gamelog/gamelog_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('playerGameLog', filepath);
                     await randomPause();
@@ -497,7 +494,7 @@ async function main() {
                 try {
                     reporter.logFetch('commonAllPlayers', { season });
                     const data = await api.getCommonAllPlayers(season);
-                    const filepath = `${outputDir}/nba/players/all_players_${season}.json`;
+                    const filepath = `${outputDir}/nba/players/allplayers/all_players_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('commonAllPlayers', filepath);
                     await randomPause();
@@ -510,7 +507,7 @@ async function main() {
                 try {
                     reporter.logFetch('playerEstimatedMetrics', { season });
                     const data = await api.getPlayerEstimatedMetrics(season);
-                    const filepath = `${outputDir}/nba/players/metrics_${season}.json`;
+                    const filepath = `${outputDir}/nba/players/metrics/metrics_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('playerEstimatedMetrics', filepath);
                     await randomPause();
@@ -524,7 +521,7 @@ async function main() {
                 try {
                     reporter.logFetch('commonTeamRoster', { teamId: opts.teamId, season });
                     const data = await api.getCommonTeamRoster(opts.teamId, season);
-                    const filepath = `${outputDir}/nba/team/${opts.teamId}/roster_${season}.json`;
+                    const filepath = `${outputDir}/nba/team/${opts.teamId}/roster/roster_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('commonTeamRoster', filepath);
                     await randomPause();
@@ -537,7 +534,7 @@ async function main() {
                 try {
                     reporter.logFetch('teamGameLog', { teamId: opts.teamId, season });
                     const data = await api.getTeamGameLog(opts.teamId, season, seasonType);
-                    const filepath = `${outputDir}/nba/team/${opts.teamId}/gamelog_${season}.json`;
+                    const filepath = `${outputDir}/nba/team/${opts.teamId}/gamelog/gamelog_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('teamGameLog', filepath);
                     await randomPause();
@@ -550,7 +547,7 @@ async function main() {
                 try {
                     reporter.logFetch('teamInfoCommon', { teamId: opts.teamId, season });
                     const data = await api.getTeamInfoCommon(opts.teamId, season);
-                    const filepath = `${outputDir}/nba/team/${opts.teamId}/info_${season}.json`;
+                    const filepath = `${outputDir}/nba/team/${opts.teamId}/info/info_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('teamInfoCommon', filepath);
                     await randomPause();
@@ -565,7 +562,7 @@ async function main() {
                     const statCat = opts.statCategory ?? 'PTS';
                     reporter.logFetch('leagueLeaders', { season, statCategory: statCat });
                     const data = await api.getLeagueLeaders(season, statCat);
-                    const filepath = `${outputDir}/nba/league/leaders_${statCat}_${season}.json`;
+                    const filepath = `${outputDir}/nba/league/leaders/leaders_${statCat}_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('leagueLeaders', filepath);
                     await randomPause();
@@ -578,7 +575,7 @@ async function main() {
                 try {
                     reporter.logFetch('leagueDashPlayerStats', { season });
                     const data = await api.getLeagueDashPlayerStats({ season, seasonType });
-                    const filepath = `${outputDir}/nba/league/dash_players_${season}.json`;
+                    const filepath = `${outputDir}/nba/league/dashplayers/dash_players_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('leagueDashPlayerStats', filepath);
                     await randomPause();
@@ -591,7 +588,7 @@ async function main() {
                 try {
                     reporter.logFetch('leagueStandings', { season });
                     const data = await api.getLeagueStandings(season, seasonType);
-                    const filepath = `${outputDir}/nba/league/standings_${season}.json`;
+                    const filepath = `${outputDir}/nba/league/standings/standings_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('leagueStandings', filepath);
                     await randomPause();
@@ -604,7 +601,7 @@ async function main() {
                 try {
                     reporter.logFetch('leagueGameLog', { season });
                     const data = await api.getLeagueGameLog(season, seasonType);
-                    const filepath = `${outputDir}/nba/league/gamelog_${season}.json`;
+                    const filepath = `${outputDir}/nba/league/gamelog/gamelog_${season}.json`;
                     writeToFile(data, filepath);
                     reporter.logSuccess('leagueGameLog', filepath);
                     await randomPause();
