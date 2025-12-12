@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/aself101/nba-api/compare/v1.1.0...v1.2.0) (2025-12-12)
+
+
+### Features
+
+* ship pipeline remediation - security, tests, and documentation ([993b7a5](https://github.com/aself101/nba-api/commit/993b7a56d3eb93a6b117161521c22a5948c60d87))
+
 # [1.1.0](https://github.com/aself101/nba-api/compare/v1.0.4...v1.1.0) (2025-12-12)
 
 
